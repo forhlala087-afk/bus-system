@@ -8,17 +8,59 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="公車主機">
 <meta name="mobile-web-app-capable" content="yes">
-<link rel="manifest" href='data:application/manifest+json,{"name":"GPS導航主機","short_name":"公車主機","display":"standalone","background_color":"#1a1a1a","theme_color":"#0078d4"}'>
-<title>GPS 導航 V168 APP版 (主機與遙控雙核心)</title>
+<meta name="theme-color" content="#1a1a1a">
+
+<title>GPS 導航 V168 (終極 APP 版)</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<script>
+    // 🚌 動態生成 APP 專屬圖示與 Manifest 憑證 (騙過瀏覽器審查，強制全螢幕)
+    (function(){
+        // 1. 畫一個藍底白字的公車圖示
+        const canvas = document.createElement('canvas');
+        canvas.width = 512; canvas.height = 512;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#0078d4'; ctx.fillRect(0,0,512,512);
+        ctx.font = '250px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = 'white'; ctx.fillText('🚌', 256, 280);
+        const iconUrl = canvas.toDataURL('image/png');
+        
+        // 2. 給蘋果 iOS 用的圖示
+        const appleIcon = document.createElement('link');
+        appleIcon.rel = 'apple-touch-icon';
+        appleIcon.href = iconUrl;
+        document.head.appendChild(appleIcon);
+
+        // 3. 給安卓 Chrome 用的嚴格憑證
+        const manifest = {
+            name: "GPS公車主機",
+            short_name: "公車主機",
+            display: "standalone", // 強制獨立全螢幕運作
+            start_url: location.href,
+            background_color: "#1a1a1a",
+            theme_color: "#0078d4",
+            icons: [{ src: iconUrl, sizes: "512x512", type: "image/png" }]
+        };
+        const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+        const manifestUrl = URL.createObjectURL(blob);
+        const link = document.createElement('link');
+        link.rel = 'manifest';
+        link.href = manifestUrl;
+        document.head.appendChild(link);
+    })();
+</script>
+
 <style>
+    /* 這裡保留你原本的 CSS 樣式，不用動 */
     body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; text-align: center; padding: 10px; background: #f0f2f5; padding-bottom: 200px; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
     
     /* 權限隱藏魔法 */
     body:not(.admin-mode) .admin-only { display: none !important; }
     body:not(.auth-mode) .auth-only { display: none !important; }
+    
+    /* ... (下略你原本的 CSS) ... */
     
     .top-right-controls { position: absolute; top: 12px; right: 15px; display: flex; gap: 8px; z-index: 1000; }
     .btn-sys-login, .btn-sys-logout, .btn-sys-demote { background: #34495e; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
