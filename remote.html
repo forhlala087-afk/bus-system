@@ -231,9 +231,7 @@
                 const data = snapshot.val();
                 if (data) {
                     document.getElementById('st-route').innerText = data.routeName || '未載入';
-                    let dirName = data.direction === 'outbound' ? '🔵 去程' : '⚪ 返程';
-                    let destName = (data.destZH && data.destZH !== "---") ? `往 ${data.destZH} 方向` : "";
-                    document.getElementById('st-dir').innerText = destName ? `${dirName} (${destName})` : dirName;
+                    document.getElementById('st-dir').innerText = data.direction === 'outbound' ? '🔵 去程' : '⚪ 返程';
                     document.getElementById('st-stop').innerText = data.currentStop || '準備中...';
                     
                     // ✨ 同步看板按鈕狀態 ✨
