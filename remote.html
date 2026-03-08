@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>📱 旗艦版司機遙控器 (含GPS與看板開關)</title>
+<title>📱 旗艦版司機遙控器 (強制心跳版)</title>
 <style>
     body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; text-align: center; padding: 15px; background: #2c3e50; color: white; margin: 0; display: flex; flex-direction: column; box-sizing: border-box; min-height: 100vh; }
     h2 { margin-top: 5px; margin-bottom: 15px; color: #ecf0f1; font-size: 22px; }
@@ -37,8 +37,6 @@
     .btn-next { background: #c0392b; box-shadow: 0 4px 0 #922b21; font-size: 22px; grid-column: span 2; padding: 20px; }
     .btn-reset{ background: #d35400; box-shadow: 0 4px 0 #a04000; }
     
-    .btn-pids { background: #e67e22; box-shadow: 0 4px 0 #d35400; font-size: 20px; margin-bottom: 10px; }
-    .btn-pids.active { background: #c0392b; box-shadow: 0 4px 0 #922b21; }
     .btn-gps { background: #007bff; box-shadow: 0 4px 0 #0056b3; margin-bottom: 10px; }
     .btn-gps.active { background: #dc3545; box-shadow: 0 4px 0 #c82333; }
 
@@ -65,10 +63,9 @@
     <div id="control-panel" class="control-panel">
 
         <div class="control-card" style="background:#1abc9c;">
-            <div class="card-title" style="color:white;">📺 顯示器與定位控制</div>
-            <button id="btn-remote-pids" class="btn-action btn-pids btn-full" onclick="sendCommand('TOGGLE_PIDS')">🚌 啟動公車看板</button>
+            <div class="card-title" style="color:white;">📡 手機 GPS 串流至大螢幕</div>
             <button id="btn-gps" class="btn-action btn-gps btn-full" onclick="toggleGPS()">開啟手機 GPS 定位</button>
-            <div id="gps-status" style="font-size:12px; font-weight:bold; color:#ecf0f1;">等待啟動...</div>
+            <div id="gps-status" style="font-size:13px; font-weight:bold; color:#ecf0f1;">等待啟動...</div>
         </div>
         
         <div class="control-card">
@@ -124,9 +121,12 @@
         let currentBusId = "";
         let unsubscribeState = null;
 
+        // GPS 變數
         let gpsWatchId = null;
+        let gpsHeartbeatId = null; // 新增：心跳計時器
         let isGpsActive = false;
         let wakeLock = null;
+        let gpsSendCount = 0; // 新增：傳送次數計算
 
         window.toggleConnect = function() {
             const input = document.getElementById('bus-id');
@@ -157,44 +157,63 @@
             }
         };
 
+        // --- 核心：GPS 強制心跳傳送邏輯 ---
         window.toggleGPS = async function() {
             const btnGps = document.getElementById('btn-gps');
             const gpsStatus = document.getElementById('gps-status');
 
             if (!isGpsActive) {
                 if (!navigator.geolocation) { alert("此設備不支援 GPS！"); return; }
-                
                 try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch(e){}
 
                 btnGps.innerText = "🛑 關閉 GPS 串流";
                 btnGps.classList.add("active");
                 isGpsActive = true;
-                gpsStatus.innerText = "定位中...";
+                gpsSendCount = 0;
+                gpsStatus.innerText = "定位啟動中...";
 
+                // 共用的傳送函數
+                const sendPosition = (pos) => {
+                    gpsSendCount++;
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+                    const heading = pos.coords.heading;
+                    const speed = pos.coords.speed;
+
+                    set(ref(db, 'buses/' + currentBusId + '/gps'), {
+                        lat: lat,
+                        lon: lon,
+                        heading: heading !== null ? heading : -1,
+                        speed: speed !== null ? speed : 0,
+                        timestamp: Date.now()
+                    });
+
+                    // 畫面上會看到數字不斷增加，代表正常運作
+                    gpsStatus.innerHTML = `🟢 傳送中 (已送出 ${gpsSendCount} 次)<br>${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+                };
+
+                // 1. 被動監聽 (當手機有大幅度移動時瞬間觸發)
                 gpsWatchId = navigator.geolocation.watchPosition(
-                    (pos) => {
-                        const lat = pos.coords.latitude;
-                        const lon = pos.coords.longitude;
-                        const heading = pos.coords.heading;
-                        const speed = pos.coords.speed;
-
-                        set(ref(db, 'buses/' + currentBusId + '/gps'), {
-                            lat: lat,
-                            lon: lon,
-                            heading: heading !== null ? heading : -1,
-                            speed: speed !== null ? speed : 0,
-                            timestamp: Date.now()
-                        });
-
-                        gpsStatus.innerHTML = `✅ 已傳送座標: <br>${lat.toFixed(5)}, ${lon.toFixed(5)}`;
-                    },
-                    (err) => { gpsStatus.innerText = "⚠️ GPS 訊號微弱或無權限"; },
-                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                    sendPosition,
+                    (err) => { console.warn("GPS 弱:", err); },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                 );
 
+                // 2. 強制心跳 (不管有沒有移動，每 2 秒強制打一次資料給主機，確保主機知道你還活著)
+                gpsHeartbeatId = setInterval(() => {
+                    navigator.geolocation.getCurrentPosition(
+                        sendPosition,
+                        () => {}, 
+                        { enableHighAccuracy: true, timeout: 3000, maximumAge: 0 }
+                    );
+                }, 2000);
+
             } else {
+                // 關閉 GPS
                 if (gpsWatchId) navigator.geolocation.clearWatch(gpsWatchId);
+                if (gpsHeartbeatId) clearInterval(gpsHeartbeatId); // 關閉心跳
                 if (wakeLock) { wakeLock.release().then(() => { wakeLock = null; }); }
+                
                 btnGps.innerText = "開啟手機 GPS 定位";
                 btnGps.classList.remove("active");
                 isGpsActive = false;
@@ -210,16 +229,6 @@
                     document.getElementById('st-route').innerText = data.routeName || '未載入';
                     document.getElementById('st-dir').innerText = data.direction === 'outbound' ? '🔵 去程' : '⚪ 返程';
                     document.getElementById('st-stop').innerText = data.currentStop || '準備中...';
-                    
-                    // 即時更新 PIDS 看板按鈕狀態
-                    const pidsBtn = document.getElementById('btn-remote-pids');
-                    if (data.isPidsRunning) {
-                        pidsBtn.innerText = "🛑 停止公車看板";
-                        pidsBtn.classList.add('active');
-                    } else {
-                        pidsBtn.innerText = "🚌 啟動公車看板";
-                        pidsBtn.classList.remove('active');
-                    }
                     
                     if (data.routeList && Array.isArray(data.routeList)) {
                         const select = document.getElementById('route-select');
