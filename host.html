@@ -366,6 +366,9 @@
             if(!busId) return;
             window._currentBusId = busId;
             window._useRemoteGps = document.getElementById('use-remote-gps').checked;
+            // 💾 記憶車號與GPS設定
+            localStorage.setItem('gps_saved_bus_id', busId);
+            localStorage.setItem('gps_saved_use_remote', window._useRemoteGps);
             
             const btnConnect = document.getElementById('btn-host-connect');
             btnConnect.innerText = "連線中...";
@@ -511,6 +514,14 @@
             document.getElementById('sys-login-secret').value = localStorage.getItem('gps_tdx_secret') || ''; 
             document.getElementById('gh-repo-url').value = localStorage.getItem('gps_github_url') || '';
             document.getElementById('gh-token').value = localStorage.getItem('gps_github_token') || '';
+            // 🚀 自動喚醒與連線待機機制
+            const savedBusId = localStorage.getItem('gps_saved_bus_id');
+            if (savedBusId) {
+                document.getElementById('host-bus-id').value = savedBusId;
+                document.getElementById('use-remote-gps').checked = (localStorage.getItem('gps_saved_use_remote') === 'true');
+                showToast("📡 系統啟動中，自動恢復待機模式...");
+                setTimeout(() => { window.connectHostToFirebase(); }, 800); // 延遲0.8秒確保網頁準備好後自動打通雲端
+            }
 
             try {
                 loadRoute("temp", 'outbound', true); 
