@@ -424,9 +424,7 @@
 
         function executeRemoteCommand(cmd) {
             switch(cmd.action) {
-                case 'TOGGLE_PIDS':
-                    window.toggleTracking('pids');
-                    break;
+                case 'TOGGLE_PIDS': window.toggleTracking('pids'); break;
                 case 'NEXT': pidsNextAction(); break;
                 case 'PREV': pidsPrevStop(); break;
                 case 'DIR_OUT': 
