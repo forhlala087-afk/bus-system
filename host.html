@@ -10,15 +10,13 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#1a1a1a">
 
-<title>GPS 導航 V168 (終極 APP 版)4</title>
+<title>GPS 導航 V168 (國道影片輪播版)</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <script>
-    // 🚌 動態生成 APP 專屬圖示與 Manifest 憑證 (騙過瀏覽器審查，強制全螢幕)
     (function(){
-        // 1. 畫一個藍底白字的公車圖示
         const canvas = document.createElement('canvas');
         canvas.width = 512; canvas.height = 512;
         const ctx = canvas.getContext('2d');
@@ -27,40 +25,28 @@
         ctx.fillStyle = 'white'; ctx.fillText('🚌', 256, 280);
         const iconUrl = canvas.toDataURL('image/png');
         
-        // 2. 給蘋果 iOS 用的圖示
         const appleIcon = document.createElement('link');
         appleIcon.rel = 'apple-touch-icon';
         appleIcon.href = iconUrl;
         document.head.appendChild(appleIcon);
 
-        // 3. 給安卓 Chrome 用的嚴格憑證
         const manifest = {
-            name: "GPS公車主機",
-            short_name: "公車主機",
-            display: "fullscreen", // 強制獨立全螢幕運作
-            start_url: location.href,
-            background_color: "#1a1a1a",
-            theme_color: "#0078d4",
+            name: "GPS公車主機", short_name: "公車主機", display: "fullscreen",
+            start_url: location.href, background_color: "#1a1a1a", theme_color: "#0078d4",
             icons: [{ src: iconUrl, sizes: "512x512", type: "image/png" }]
         };
         const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
         const manifestUrl = URL.createObjectURL(blob);
         const link = document.createElement('link');
-        link.rel = 'manifest';
-        link.href = manifestUrl;
+        link.rel = 'manifest'; link.href = manifestUrl;
         document.head.appendChild(link);
     })();
 </script>
 
 <style>
-    /* 這裡保留你原本的 CSS 樣式，不用動 */
     body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; text-align: center; padding: 10px; background: #f0f2f5; padding-bottom: 200px; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
-    
-    /* 權限隱藏魔法 */
     body:not(.admin-mode) .admin-only { display: none !important; }
     body:not(.auth-mode) .auth-only { display: none !important; }
-    
-    /* ... (下略你原本的 CSS) ... */
     
     .top-right-controls { position: absolute; top: 12px; right: 15px; display: flex; gap: 8px; z-index: 1000; }
     .btn-sys-login, .btn-sys-logout, .btn-sys-demote { background: #34495e; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
@@ -114,13 +100,12 @@
     #toast { visibility: hidden; min-width: 250px; background-color: rgba(0,0,0,0.8); color: #fff; text-align: center; border-radius: 50px; padding: 12px 20px; position: fixed; z-index: 99999; left: 50%; bottom: 120px; transform: translateX(-50%); font-size: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); backdrop-filter: blur(4px); } #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } @keyframes fadein { from { bottom: 100px; opacity: 0; } to { bottom: 120px; opacity: 1; } } @keyframes fadeout { from { bottom: 120px; opacity: 1; } to { bottom: 100px; opacity: 0; } } @keyframes blink { 50% { opacity: 0.5; } }
 
-    /* PIDS 看板樣式 */
     #pids-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #1a1a1a; z-index: 20000; flex-direction: column; --bg-color: #1a1a1a; --header-color: #0078d4; --text-main: #ffffff; --text-sub: #dddddd; --highlight: #e74c3c; --future: #ffffff; --dim: #555555; --track-width: 8px; --stop-height: 16vh; --graphic-col-width: 100px; --dot-small: 40px; --dot-large: 70px; font-family: "Microsoft JhengHei", sans-serif; }
     #pids-overlay .pids-header { background-color: var(--header-color); height: 14vh; display: flex; align-items: center; justify-content: space-between; padding: 0 3vw; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 100; }
     #pids-overlay .route-info-pids { font-size: 6vh; font-weight: 900; background: rgba(0,0,0,0.2); padding: 5px 25px; border-radius: 12px; min-width: 10vw; text-align: center; }
     #pids-overlay .status-title-pids { font-size: 3.5vh; font-weight: bold; letter-spacing: 2px; text-align: center; }
     #pids-overlay .destination-group-pids { display: flex; align-items: center; gap: 15px; text-align: right; } #pids-overlay .arrow-icon-pids { font-size: 4vh; } #pids-overlay .dest-text-pids { display: flex; flex-direction: column; justify-content: center; } #pids-overlay .dest-zh-pids { font-size: 4vh; font-weight: bold; line-height: 1.2; } #pids-overlay .dest-en-pids { font-size: 2vh; opacity: 0.9; }
-    #pids-overlay .viewport-pids { position: relative; flex: 1; width: 100%; overflow: hidden; cursor: pointer; } #pids-overlay .page-pids { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.8s ease; pointer-events: none; background-color: var(--bg-color); } #pids-overlay .page-pids.active { opacity: 1; pointer-events: auto; }
+    #pids-overlay .viewport-pids { position: relative; flex: 1; width: 100%; overflow: hidden; } #pids-overlay .page-pids { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.8s ease; pointer-events: none; background-color: var(--bg-color); } #pids-overlay .page-pids.active { opacity: 1; pointer-events: auto; }
     #pids-overlay .main-station { font-size: 18vh; color: var(--text-main); margin-bottom: 2vh; font-weight: bold; text-align: center; } #pids-overlay .sub-station { font-size: 7vh; color: var(--text-sub); text-align: center; }
     #pids-overlay .route-container-pids { width: 80%; position: relative; display: flex; flex-direction: column; margin-left: 10vw; } #pids-overlay .stop-item-pids { position: relative; display: flex; align-items: center; height: var(--stop-height); width: 100%; } #pids-overlay .graphic-col-pids { width: var(--graphic-col-width); height: 100%; position: relative; display: flex; justify-content: center; align-items: center; flex-shrink: 0; } #pids-overlay .track-line-pids { position: absolute; left: 50%; transform: translateX(-50%); top: -50%; height: 100%; width: var(--track-width); background-color: var(--dim); opacity: 0.3; } #pids-overlay .stop-item-pids:first-child .track-line-pids { display: none; } #pids-overlay .dot-pids { width: var(--dot-small); height: var(--dot-small); border-radius: 50%; background-color: var(--dim); border: 4px solid var(--bg-color); z-index: 2; box-sizing: border-box; }
     #pids-overlay .stop-text-group-pids { margin-left: 30px; display: flex; flex-direction: column; text-align: left; } #pids-overlay .stop-name-zh-pids { font-size: 4.5vh; color: var(--dim); font-weight: bold; margin: 0; } #pids-overlay .stop-name-en-pids { font-size: 2.2vh; color: var(--dim); margin: 0; }
@@ -128,12 +113,11 @@
     #pids-overlay .stop-item-pids.active { opacity: 1; } #pids-overlay .stop-item-pids.active .dot-pids { width: var(--dot-large); height: var(--dot-large); background-color: var(--highlight); box-shadow: 0 0 30px var(--highlight); border-width: 0; } #pids-overlay .stop-item-pids.active .stop-name-zh-pids { color: var(--highlight); font-size: 7vh; } #pids-overlay .stop-item-pids.active .stop-name-en-pids { color: var(--text-main); font-size: 3vh; }
     #pids-overlay .stop-item-pids.active.traveling .track-line-pids, #pids-overlay .stop-item-pids.active.arrived .track-line-pids { opacity: 1; background: repeating-linear-gradient(0deg, var(--highlight) 0px, var(--highlight) 20px, transparent 20px, transparent 40px); background-size: 100% 200%; } #pids-overlay .stop-item-pids.active.traveling .track-line-pids { animation: flowDownPids 1s linear infinite; } @keyframes flowDownPids { 0% { background-position: 0% 100%; } 100% { background-position: 0% 0%; } } #pids-overlay .stop-item-pids.active.traveling .dot-pids, #pids-overlay .stop-item-pids.active.arrived .dot-pids { animation: breathePids 2s infinite ease-in-out; } @keyframes breathePids { 0%, 100% { transform: scale(1); box-shadow: 0 0 30px var(--highlight); } 50% { transform: scale(1.1); box-shadow: 0 0 50px var(--highlight); } }
     .pids-setting-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; background: #f8f9fa; padding: 10px; border-radius: 8px; border-left: 4px solid #ced4da; } .pids-zip-btn, .pids-audio-btn, .pids-manage-btn { color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; border: none; } .pids-zip-btn { background: #8e44ad; } .pids-audio-btn { background: #2980b9; } .pids-manage-btn { background: #6c757d; } .pids-select, .lang-select { padding: 5px; border-radius: 4px; border: 1px solid #ccc; } .lang-select { width: 18%; } .pids-manual-overlay { position: absolute; bottom: 85px; right: 25px; z-index: 2147483647; background: rgba(0,0,0,0.6); border-radius: 8px; padding: 10px; display: none; gap: 10px; } .pids-manual-btn { background: #444; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; } .pids-clock { position: absolute; bottom: 25px; right: 25px; font-size: 3vh; font-weight: bold; color: rgba(255, 255, 255, 0.85); pointer-events: none; z-index: 2147483647; font-family: monospace; }
-    
+
     .direction-tabs { display: flex; margin-bottom: 15px; background: #fff; border-radius: 12px; padding: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); } .dir-tab { flex: 1; padding: 12px; border: none; background: transparent; font-size: 16px; font-weight: bold; color: #666; border-radius: 8px; cursor: pointer; } .dir-tab.active { background: #007bff; color: white; box-shadow: 0 2px 5px rgba(0,123,255,0.3); } .dir-tab#tab-inbound.active { background: #e67e22; box-shadow: 0 2px 5px rgba(230,126,34,0.3); } .btn-load-dir { background: #f1f3f5; border: 1px solid #ced4da; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; color: #495057; font-size: 13px; flex: 1; } .btn-load-dir.out { color: #007bff; border-color: #007bff; background: #e6f2ff; } .btn-load-dir.in { color: #e67e22; border-color: #e67e22; background: #fdf2e9; }
 
     #pids-switch-modal { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(30,30,30,0.95); color: white; padding: 30px; border-radius: 16px; z-index: 99999; text-align: center; border: 2px solid #0078d4; width: 80%; max-width: 450px; } .switch-title-pids { font-size: 3.5vh; font-weight: bold; margin-bottom: 15px; } .switch-desc-pids { font-size: 2.5vh; margin-bottom: 25px; color: #ccc; } .switch-countdown-text { color: #e74c3c; font-size: 5vh; font-weight: bold; margin: 0 10px; } .btn-switch-cancel, .btn-switch-confirm { flex: 1; padding: 15px; border-radius: 8px; color: white; border: none; font-size: 2.5vh; cursor: pointer; } .btn-switch-cancel { background: #555; } .btn-switch-confirm { background: #0078d4; font-weight: bold; }
 
-    /* TDX Autocomplete */
     .tdx-form-group { text-align: left; margin-bottom: 12px; } .tdx-form-group label { font-size: 13px; font-weight: bold; color: #555; display: block; margin-bottom: 4px; } .tdx-form-group select, .tdx-form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; box-sizing: border-box; } .tdx-desc { font-size: 12px; color: #888; margin-bottom: 15px; text-align: left; } .autocomplete-wrapper { position: relative; width: 100%; } .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; z-index: 99999; background: white; border: 1px solid #ccc; border-top: none; border-radius: 0 0 6px 6px; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15); } .autocomplete-item { padding: 10px; font-size: 14px; color: #333; cursor: pointer; border-bottom: 1px solid #eee; text-align: left; } .autocomplete-item:last-child { border-bottom: none; } .autocomplete-item:hover { background-color: #e3f2fd; color: #007bff; font-weight: bold; }
 </style>
 </head>
@@ -141,7 +125,7 @@
 
     <h3>📍 GPS 導航 V168 APP版</h3>
     <p style="font-size:12px; color:#888; margin-top:-10px;">旗艦主機 + 遙控 GPS 雙核心版</p>
-    
+
     <div class="top-right-controls">
         <button id="btn-remote-pair" class="btn-remote" onclick="document.getElementById('remote-modal').style.display='flex'">📱 遙控器配對</button>
         <button id="btn-sys-login" class="btn-sys-login" onclick="document.getElementById('sys-login-modal').style.display='flex'">🔒 系統登入</button>
@@ -156,10 +140,13 @@
 
     <div class="auth-only" style="display:flex; gap:10px; margin-bottom:10px;">
         <button class="btn-zip" onclick="document.getElementById('zip-input').click()" style="flex:1;">📦 大補包</button>
+        <input type="file" id="playlist-input" accept="video/*" multiple style="display:none" onchange="handlePlaylistImport(this)">
+        <button class="btn-zip" style="background:#e84393; flex:1;" onclick="document.getElementById('playlist-input').click()">🎬 輪播影片</button>
+        
         <button class="btn-csv admin-only" onclick="document.getElementById('csv-input').click()" style="flex:1;">📄 CSV</button>
         <button class="btn-tdx" onclick="openTdxModal()" style="flex:2;">🌐 TDX</button>
     </div>
-    
+
     <input type="file" id="zip-input" accept=".zip" style="display:none" onchange="handleZipImport(this)">
     <input type="file" id="csv-input" accept=".csv" style="display:none" onchange="handleCSVImport(this)">
 
@@ -169,10 +156,10 @@
         <button class="btn-json-helper" onclick="downloadConfigJson()">📥 下載 JSON</button>
         <button class="btn-auto-checkpoint" onclick="autoSetCheckpoints()">🏁 自動判定重啟點</button>
     </div>
-    
+
     <button class="btn-add admin-only" onclick="addStop()">＋ 手動新增一站</button>
     <button class="btn-clear-all admin-only" onclick="clearAllStops()">🗑️ 清空專案 (含去/返程)</button>
-    
+
     <div id="stops-container"></div>
 
     <div class="bottom-bar">
@@ -267,7 +254,7 @@
     </div>
 
     <div id="save-modal" class="modal-overlay" style="z-index:32000;"><div class="modal-content"><div class="modal-header"><div class="header-title">💾 儲存專案</div><button onclick="document.getElementById('save-modal').style.display='none'" style="border:none;background:none;font-size:24px;cursor:pointer;">✕</button></div><div style="text-align: left; overflow-y: auto;"><label style="font-weight:bold; font-size:14px; color:#333;">📂 專案名稱：</label><input type="text" id="save-proj-name" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; margin-top:5px; margin-bottom:15px;" placeholder="例如: 307路"><label style="font-weight:bold; font-size:14px; color:#333;">🚌 路線編號(看板)：</label><input type="text" id="save-route-name" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; margin-top:5px; margin-bottom:15px;"><div style="background:#e6f2ff; padding:10px; border-radius:8px; margin-bottom:10px;"><div style="font-weight:bold; color:#0056b3; margin-bottom:5px;">🔵 去程往</div><div style="display:flex; gap:10px;"><input type="text" id="save-out-zh" placeholder="中文" style="flex:1; padding:8px; border-radius:6px; border:1px solid #ccc;"><input type="text" id="save-out-en" placeholder="英文" style="flex:1; padding:8px; border-radius:6px; border:1px solid #ccc;"></div></div><div style="background:#fdf2e9; padding:10px; border-radius:8px; margin-bottom:20px;"><div style="font-weight:bold; color:#c82333; margin-bottom:5px;">⚪ 返程往</div><div style="display:flex; gap:10px;"><input type="text" id="save-in-zh" placeholder="中文" style="flex:1; padding:8px; border-radius:6px; border:1px solid #ccc;"><input type="text" id="save-in-en" placeholder="英文" style="flex:1; padding:8px; border-radius:6px; border:1px solid #ccc;"></div></div><button onclick="confirmSaveRoute()" style="width:100%; padding:12px; border-radius:8px; background:#27ae60; color:white; font-size:16px; font-weight:bold; border:none; cursor:pointer;">✅ 確認儲存</button></div></div></div>
-    
+
     <div id="pids-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -310,9 +297,9 @@
             <button onclick="savePidsDefaults()" style="width:100%; padding:12px; border-radius:8px; background:#28a745; color:white; font-size:15px; font-weight:bold; border:none; cursor:pointer; margin-top:20px;">💾 儲存並設為預設值</button>
         </div>
     </div>
-    
+
     <div id="pids-audio-manager-modal" class="modal-overlay" style="z-index: 31000;"><div class="modal-content"><div class="modal-header"><div class="header-title" id="pids-audio-manager-title">管理音檔</div><button onclick="closePidsAudioManager()" style="border:none; background:none; font-size:24px; cursor:pointer;">✕</button></div><div id="pids-audio-list" style="overflow-y: auto; flex:1;"></div></div></div>
-    
+
     <div id="pids-overlay">
         <div class="pids-header" id="header-bar-pids"><div class="route-info-pids" id="route-name-pids">---</div><div class="status-title-pids" id="status-text-pids">下一站 | Next Stop</div><div class="destination-group-pids"><span class="arrow-icon-pids">➔</span><div class="dest-text-pids"><div class="dest-zh-pids" id="dest-zh-pids">---</div><div class="dest-en-pids" id="dest-en-pids">---</div></div></div></div>
         <div class="viewport-pids" id="pidsClickZone"><div id="page-next-stop-pids" class="page-pids active"><div class="main-station" id="big-zh-pids">準備中</div><div class="sub-station" id="big-en-pids">Ready</div></div><div id="page-route-map-pids" class="page-pids"><div class="route-container-pids" id="route-list-container-pids"></div></div></div>
@@ -321,14 +308,14 @@
         <div class="pids-manual-overlay" id="pids-manual-controls"><button class="pids-manual-btn" onclick="pidsPrevStop()">◀ 上一站</button><button class="pids-manual-btn" onclick="pidsNextAction()">▶ 下一站/抵達</button></div>
         <div id="pids-clock" class="pids-clock">現在時間：--:--</div>
     </div>
-    
+
     <div id="toast">訊息提示</div>
     <div id="loading-overlay"><div class="loader"></div><div id="loading-text" style="font-size:18px; font-weight:bold; color:#333; text-align:center;">處理中...</div></div>
-    
+
     <div id="route-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><div class="header-title">📂 路線列表</div><div class="header-actions"><button class="btn-io admin-only" onclick="document.getElementById('import-file').click()">📥 匯入</button><button class="btn-io admin-only" onclick="exportRoutesFile()">📤 匯出</button><button onclick="closeRouteList()" style="border:none; background:none; font-size:24px; margin-left:10px;">✕</button></div></div><div id="route-list-container"></div></div></div>
     <div id="map-modal" class="modal-overlay"><div class="modal-content" id="map-modal-content"><div class="modal-header"><span>📍 地圖選點 (範圍 <span id="map-radius-display">150</span>m)</span></div><div id="map"></div><div style="display:flex; gap:10px; margin-top:10px;"><button style="flex:1; padding:12px; border-radius:8px; border:1px solid #ccc;" onclick="closeMap()">取消</button><button style="flex:2; padding:12px; border-radius:8px; border:none; background:#27ae60; color:white; font-weight:bold;" onclick="confirmMapLocation()">✅ 確認座標</button></div></div></div>
     <div id="video-overlay"><video id="mainVideo" playsinline webkit-playsinline></video><div id="error-msg">影片無法播放</div><button class="btn-close-x" onclick="closeVideo()">✕</button><button class="btn-fullscreen" onclick="forceFullscreen()">⛶</button></div>
-  <script>
+    <script>
         // 👑 超級管理員專屬 ID
         const SUPER_ADMIN_TDX_ID = "411112012-a539fe2f-6eb9-4ff0";
 
@@ -353,20 +340,30 @@
         window._requireStrictStartIdx = -1; window._hasPhysicallyEnteredReturnTrip = false; 
 
         window.pidsAssets = { common: {}, zh: {}, en: {}, tw: {}, hk: {}, yue: {} };
+        // ✨ 新增影片輪播全域變數 ✨
+        window.playlistVideos = []; window._isPlaylistPlaying = false; window._playlistIndex = 0;
         let pidsPlayQueue = []; window.pidsIsPlaying = false; let pidsAnnounceId = 0; const pidsGlobalAudio = new Audio();
         window.isNextStopMode = true; let pidsCycleInterval = null; let pidsIsShowingMap = false; let pidsClockInterval = null;
         
         const container = document.getElementById('stops-container'); const video = document.getElementById('mainVideo'); const videoOverlay = document.getElementById('video-overlay'); const pidsOverlay = document.getElementById('pids-overlay'); const errorMsg = document.getElementById('error-msg'); const elLastTime = document.getElementById('last-time'); const elHeartbeat = document.getElementById('heartbeat-counter'); const mapModal = document.getElementById('map-modal'); const routeModal = document.getElementById('route-modal'); const routeListContainer = document.getElementById('route-list-container'); const radiusDisplay = document.getElementById('map-radius-display'); const btnVideo = document.getElementById('toggleBtnVideo'); const btnPIDS = document.getElementById('toggleBtnPIDS'); const loadingOverlay = document.getElementById('loading-overlay'); const loadingText = document.getElementById('loading-text');
 
+        // ✨ 判斷是否為「可顯示/播報」的站點 ✨
+        function isPidsValid(s) {
+            return s.enabled && !s.mergedSkipped && !s.nameZH.includes('[影片開始]') && !s.nameZH.includes('[影片結束]');
+        }
+
         // ==========================================
-        // 🚀 Firebase 雲端遙控引擎 (動態載入，不污染全域)
+        // 🚀 Firebase 雲端遙控引擎
         // ==========================================
+        window.unsubCmd = null;
+        window.unsubGps = null;
+        window.unsubStatus = null;
+
         window.connectHostToFirebase = async function() {
             const busId = document.getElementById('host-bus-id').value.trim();
             if(!busId) return;
             window._currentBusId = busId;
             window._useRemoteGps = document.getElementById('use-remote-gps').checked;
-            // 💾 記憶車號與GPS設定
             localStorage.setItem('gps_saved_bus_id', busId);
             localStorage.setItem('gps_saved_use_remote', window._useRemoteGps);
             
@@ -393,47 +390,42 @@
                 }
 
                 window._isHostConnected = true;
-let lastCmdTime = 0;
+                let lastCmdTime = 0;
 
-// ✨ 1. 每次連線前，先砍掉上一個車號的舊監聽器 (防幽靈連線)
-if (window.unsubCmd) window.unsubCmd();
-if (window.unsubGps) window.unsubGps();
-if (window.unsubStatus) window.unsubStatus();
+                if (window.unsubCmd) window.unsubCmd();
+                if (window.unsubGps) window.unsubGps();
+                if (window.unsubStatus) window.unsubStatus();
 
-// ✨ 2. 重新建立新車號的監聽器，並把它們存進變數裡
-// 監聽來自遙控器的指令
-window.unsubCmd = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/command'), (snap) => {
-    const data = snap.val();
-    if(data && data.timestamp > lastCmdTime) {
-        lastCmdTime = data.timestamp;
-        executeRemoteCommand(data);
-    }
-});
+                window.unsubCmd = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/command'), (snap) => {
+                    const data = snap.val();
+                    if(data && data.timestamp > lastCmdTime) {
+                        lastCmdTime = data.timestamp;
+                        executeRemoteCommand(data);
+                    }
+                });
 
-// 監聽來自遙控器的 GPS
-window.unsubGps = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/gps'), (snap) => {
-    if(window._useRemoteGps) {
-        const data = snap.val();
-        if(data) {
-            onLocationUpdate({ coords: { latitude: data.lat, longitude: data.lon, heading: data.heading, speed: data.speed }});
-        }
-    }
-});
+                window.unsubGps = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/gps'), (snap) => {
+                    if(window._useRemoteGps) {
+                        const data = snap.val();
+                        if(data) {
+                            onLocationUpdate({ coords: { latitude: data.lat, longitude: data.lon, heading: data.heading, speed: data.speed }});
+                        }
+                    }
+                });
 
-// 💓 偵測手機遙控器是否存活 (無視時差版)
-window._remoteIsAlive = false;
-let remoteTimeout = null;
-window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status'), (snap) => {
-    const data = snap.val();
-    if (data && data.alive) {
-        window._remoteIsAlive = true;
-        if (remoteTimeout) clearTimeout(remoteTimeout);
-        remoteTimeout = setTimeout(() => { 
-            window._remoteIsAlive = false; 
-            showToast("⚠️ 遙控器斷線，主機喇叭接管！"); 
-        }, 10000); 
-    }
-});
+                window._remoteIsAlive = false;
+                let remoteTimeout = null;
+                window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status'), (snap) => {
+                    const data = snap.val();
+                    if (data && data.alive) {
+                        window._remoteIsAlive = true;
+                        if (remoteTimeout) clearTimeout(remoteTimeout);
+                        remoteTimeout = setTimeout(() => { 
+                            window._remoteIsAlive = false; 
+                            showToast("⚠️ 遙控器斷線，主機喇叭接管！"); 
+                        }, 10000); 
+                    }
+                });
                 
                 pushStateToFirebase();
                 btnConnect.innerText = "✅ 雲端綁定成功";
@@ -449,9 +441,7 @@ window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status
         function executeRemoteCommand(cmd) {
             switch(cmd.action) {
                 case 'LOAD_ROUTE_DIR': 
-            // 如果面板正在播報，先強制關閉以免卡住
             if (window.isTrackingVideo || window.isTrackingPIDS) { window.stopTracking(); }
-            // 啟用「靜默模式 (true)」，主機就不會跳出確認視窗
             window.loadRoute(cmd.payload.id, cmd.payload.dir, true); 
             break;
                 case 'TOGGLE_PIDS': window.toggleTracking('pids'); break;
@@ -476,7 +466,7 @@ window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status
                     break;
                 case 'RESET': 
                     resetStopsState(); 
-                    window.pidsCurrentIndex = window.stops.findIndex(s => s.enabled && !s.mergedSkipped);
+                    window.pidsCurrentIndex = window.stops.findIndex(s => isPidsValid(s));
                     if(window.isTrackingPIDS) {
                         window.isNextStopMode = true; 
                         document.getElementById('status-text-pids').innerText = "下一站 | Next Stop"; 
@@ -541,13 +531,13 @@ window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status
             document.getElementById('sys-login-secret').value = localStorage.getItem('gps_tdx_secret') || ''; 
             document.getElementById('gh-repo-url').value = localStorage.getItem('gps_github_url') || '';
             document.getElementById('gh-token').value = localStorage.getItem('gps_github_token') || '';
-            // 🚀 自動喚醒與連線待機機制
+            
             const savedBusId = localStorage.getItem('gps_saved_bus_id');
             if (savedBusId) {
                 document.getElementById('host-bus-id').value = savedBusId;
                 document.getElementById('use-remote-gps').checked = (localStorage.getItem('gps_saved_use_remote') === 'true');
                 showToast("📡 系統啟動中，自動恢復待機模式...");
-                setTimeout(() => { window.connectHostToFirebase(); }, 800); // 延遲0.8秒確保網頁準備好後自動打通雲端
+                setTimeout(() => { window.connectHostToFirebase(); }, 800); 
             }
 
             try {
@@ -561,6 +551,22 @@ window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status
                 await loadAllPidsAudioFromDB(); 
             } catch(e) { console.error("初始化錯誤", e); }
         };
+
+        // ✨ 輪播影片匯入處理 ✨
+        window.handlePlaylistImport = function(input) {
+            if(!input.files || input.files.length === 0) return;
+            loadingOverlay.style.display = 'flex'; loadingText.innerText = "載入影片中...";
+            let filesArray = Array.from(input.files);
+            // 檔名如果是 1.mp4, 2.mp4，按數字排序
+            filesArray.sort((a, b) => parseInt(a.name) - parseInt(b.name));
+            
+            window.playlistVideos = [];
+            for(let i = 0; i < filesArray.length; i++) {
+                window.playlistVideos.push({ name: filesArray[i].name, url: URL.createObjectURL(filesArray[i]) });
+            }
+            loadingOverlay.style.display = 'none'; input.value = '';
+            alert(`✅ 成功匯入 ${filesArray.length} 部輪播影片！\n站點命名為 [影片開始] 與 [影片結束] 即可自動觸發。`);
+        }
 
         window.syncGitHubAudio = async function() {
             const urlInput = document.getElementById('gh-repo-url').value.trim(); const tokenInput = document.getElementById('gh-token').value.trim();
@@ -578,9 +584,24 @@ window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status
                 const zipBlob = await zipRes.blob(); let zip = await JSZip.loadAsync(zipBlob);
                 const folderMap = { '罐頭': 'common', 'common': 'common', '中文': 'zh', 'zh': 'zh', '英文': 'en', 'en': 'en', '台語': 'tw', 'tw': 'tw', '客語': 'hk', 'hk': 'hk', '粵語': 'yue', 'yue': 'yue' };
                 let totalDownloaded = 0;
+                let playlistCount = 0;
+                
+                window.playlistVideos = []; // 清空舊的輪播
+                
                 for (let path of Object.keys(zip.files)) {
                     if (!zip.files[path].dir && !path.includes('__MACOSX')) {
                         let fileName = path.split('/').pop(); let sysFolder = null;
+                        
+                        // ✨ 檢查是否為輪播影片 ✨
+                        if (path.includes('影片輪播/') || path.includes('playlist/')) {
+                            if (fileName.match(/\.(mp4|mov|webm|mkv)$/i)) {
+                                const b = await zip.files[path].async("blob");
+                                window.playlistVideos.push({ name: fileName, url: URL.createObjectURL(b) });
+                                playlistCount++;
+                            }
+                            continue;
+                        }
+
                         for (let [zhName, codeName] of Object.entries(folderMap)) { if (path.includes(zhName + '/')) { sysFolder = codeName; break; } }
                         if (sysFolder && fileName.match(/\.(mp3|wav|m4a|ogg|aac)$/i)) {
                             let audioBlob = await zip.files[path].async("blob");
@@ -589,14 +610,20 @@ window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status
                         }
                     }
                 }
-                alert(`✅ 私密庫 ZIP 同步完成！\n共成功匯入 ${totalDownloaded} 個音檔。`);
+                
+                // 將抓到的影片排序
+                if (window.playlistVideos.length > 0) {
+                    window.playlistVideos.sort((a, b) => (parseInt(a.name) || 0) - (parseInt(b.name) || 0));
+                }
+
+                alert(`✅ 私密庫 ZIP 同步完成！\n共成功匯入 ${totalDownloaded} 個音檔。\n${playlistCount > 0 ? `匯入 ${playlistCount} 部輪播影片。` : ''}`);
             } catch(e) { alert(`❌ 同步失敗！\n${e.message}`); } finally { loadingOverlay.style.display = 'none'; }
         };
 
         window.handleZipImport = async function(input) {
             const file = input.files[0]; if (!file) return; loadingOverlay.style.display = 'flex'; loadingText.innerText = "分析大補包...";
             try {
-                if (window.stops.length > 0) { if (confirm("清空方向資料？\n確定：清空\n取消：附加")) { window.stops = []; window.stopCounter = 0; currentMaxIndex = -1; lastGlobalExitTime = 0; lastStationActivityTime = 0; window.routeName = "---"; window.destZH = "---"; window.destEN = "---"; } }
+                if (window.stops.length > 0) { if (confirm("清空方向資料？\n確定：清空\n取消：附加")) { window.stops = []; window.stopCounter = 0; currentMaxIndex = -1; lastGlobalExitTime = 0; lastStationActivityTime = 0; window.routeName = "---"; window.destZH = "---"; window.destEN = "---"; window.playlistVideos = []; } }
                 let fallbackRouteName = "---", fallbackDestZH = "---", fallbackDestEN = "---"; const baseName = file.name.replace(/\.zip$/i, "").trim(); const matchTo = baseName.match(/^(.+?)\s+(.+?)\s+(To\s*.+)$/i);
                 if (matchTo) { fallbackRouteName = matchTo[1].trim(); fallbackDestZH = matchTo[2].trim(); fallbackDestEN = matchTo[3].trim(); } else { const parts = baseName.split(/\s+/); if (parts.length >= 3) { fallbackRouteName = parts[0]; fallbackDestZH = parts[1]; fallbackDestEN = parts.slice(2).join(' '); } else if (parts.length === 2) { fallbackRouteName = parts[0]; fallbackDestZH = parts[1]; } else if (parts.length === 1 && parts[0] !== "") { fallbackRouteName = parts[0]; } }
                 if (window.routeName === "---") window.routeName = fallbackRouteName; if (window.destZH === "---") window.destZH = fallbackDestZH; if (window.destEN === "---") window.destEN = fallbackDestEN;
@@ -622,11 +649,23 @@ window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status
                 const pidsZipMap = { '罐頭.zip': 'common', 'common.zip': 'common', '中文.zip': 'zh', 'zh.zip': 'zh', '英文.zip': 'en', 'en.zip': 'en', '台語.zip': 'tw', 'tw.zip': 'tw', '客語.zip': 'hk', 'hk.zip': 'hk', '粵語.zip': 'yue', 'yue.zip': 'yue' };
                 const folderMap = { '罐頭/': 'common', 'common/': 'common', '中文/': 'zh', 'zh/': 'zh', '英文/': 'en', 'en/': 'en', '台語/': 'tw', 'tw/': 'tw', '客語/': 'hk', 'hk/': 'hk', '粵語/': 'yue', 'yue/': 'yue' };
                 let loadedAudioCounts = { common: 0, zh: 0, en: 0, tw: 0, hk: 0, yue: 0 };
+                let playlistCount = 0;
                 
                 for (const fullPath of Object.keys(zip.files)) {
                     if (fullPath.includes('__MACOSX') || fullPath.includes('.DS_Store')) continue;
                     const entry = zip.files[fullPath]; const fileName = fullPath.split('/').pop();
                     if (!entry.dir) {
+                        
+                        // ✨ 擷取輪播影片 ✨
+                        if (fullPath.includes('影片輪播/') || fullPath.includes('playlist/')) {
+                            if (fileName.match(/\.(mp4|mov|webm|mkv)$/i)) {
+                                const b = await entry.async("blob");
+                                window.playlistVideos.push({ name: fileName, url: URL.createObjectURL(b) });
+                                playlistCount++;
+                            }
+                            continue;
+                        }
+
                         if (pidsZipMap[fileName]) {
                             const type = pidsZipMap[fileName]; const nestedBlob = await entry.async("blob"); const nestedZip = await JSZip.loadAsync(nestedBlob);
                             for (const nPath of Object.keys(nestedZip.files)) { if (!nestedZip.files[nPath].dir && !nPath.includes('__MACOSX')) { const audioName = nPath.split('/').pop(); const audioBlob = await nestedZip.files[nPath].async("blob"); window.pidsAssets[type][audioName] = URL.createObjectURL(audioBlob); await savePidsAudioToDB(type, audioName, audioBlob); loadedAudioCounts[type]++; } }
@@ -635,8 +674,14 @@ window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status
                         }
                     }
                 }
+
+                if (window.playlistVideos.length > 0) {
+                    window.playlistVideos.sort((a, b) => (parseInt(a.name) || 0) - (parseInt(b.name) || 0));
+                    pidsMsg += `\n- 輪播影片: ${window.playlistVideos.length} 部`;
+                }
+
                 for (const [type, count] of Object.entries(loadedAudioCounts)) { if (count > 0 && document.getElementById(`led-${type}`)) { document.getElementById(`led-${type}`).classList.add('on'); pidsMsg += `\n- ${type}: ${count} 個`; } }
-                updateTabLabels(); renderAllStops(); let finalAlertMsg = "✅ 大補包匯入完成！"; if (configData) finalAlertMsg += `\n- 載入 ${configData.length} 個影片站點`; if (csvAddedCount > 0) finalAlertMsg += `\n- 載入 ${csvAddedCount} 個路線站點`; if (pidsMsg) finalAlertMsg += `\n[看板語音包]${pidsMsg}`; alert(finalAlertMsg);
+                updateTabLabels(); renderAllStops(); let finalAlertMsg = "✅ 大補包匯入完成！"; if (configData) finalAlertMsg += `\n- 載入 ${configData.length} 個影片站點`; if (csvAddedCount > 0) finalAlertMsg += `\n- 載入 ${csvAddedCount} 個路線站點`; if (pidsMsg) finalAlertMsg += `\n[看/影片]${pidsMsg}`; alert(finalAlertMsg);
             } catch (err) { console.error(err); alert("ZIP 失敗：" + err.message); } finally { loadingOverlay.style.display = 'none'; input.value = ''; }
         }
 
@@ -702,13 +747,15 @@ window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status
         window.confirmDirectionSwitch = function() {
             if (switchTimer) clearInterval(switchTimer); document.getElementById('pids-switch-modal').style.display = 'none';
             if (pendingSwitchDir) {
-                let currentLastIdx = -1; for (let i = window.stops.length - 1; i >= 0; i--) { if (window.stops[i].enabled && !window.stops[i].mergedSkipped) { currentLastIdx = i; break; } }
+                let currentLastIdx = -1; for (let i = window.stops.length - 1; i >= 0; i--) { if (isPidsValid(window.stops[i])) { currentLastIdx = i; break; } }
                 let lastStationName = currentLastIdx !== -1 ? window.stops[currentLastIdx].nameZH : "";
                 saveCurrentToProject(); window.currentDirection = pendingSwitchDir; const data = window.projectData[pendingSwitchDir];
                 window.stops = data.stops || []; window.routeName = data.routeName || "---"; window.destZH = data.destZH || "---"; window.destEN = data.destEN || "---"; window.stopCounter = data.stopCounter || 0;
                 resetStopsState(); document.getElementById('tab-outbound').classList.toggle('active', pendingSwitchDir === 'outbound'); document.getElementById('tab-inbound').classList.toggle('active', pendingSwitchDir === 'inbound'); updateTabLabels(); renderAllStops();
                 
-                let firstIdx = window.stops.findIndex(s => s.enabled && !s.mergedSkipped); let secondIdx = -1; if (firstIdx !== -1) { for (let i = firstIdx + 1; i < window.stops.length; i++) { if (window.stops[i].enabled && !window.stops[i].mergedSkipped) { secondIdx = i; break; } } }
+                // ✨ PIDS 使用 isPidsValid 抓取首站 ✨
+                let firstIdx = window.stops.findIndex(s => isPidsValid(s)); let secondIdx = -1; 
+                if (firstIdx !== -1) { for (let i = firstIdx + 1; i < window.stops.length; i++) { if (isPidsValid(window.stops[i])) { secondIdx = i; break; } } }
                 let shouldSkipFirst = false; if (firstIdx !== -1 && secondIdx !== -1 && window.stops[firstIdx].nameZH === lastStationName && lastStationName !== "") { shouldSkipFirst = true; }
                 
                 if (shouldSkipFirst) { 
@@ -926,7 +973,7 @@ window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status
             if (!confirm("⚠️ 警告：確定要清空目前專案 (包含去程與返程) 的所有站點嗎？\n\n(已儲存到路線列表的檔案不會消失)")) return;
             window.stops = []; window.stopCounter = 0; currentMaxIndex = -1; lastGlobalExitTime = 0; lastStationActivityTime = 0; window.routeName = "---"; window.destZH = "---"; window.destEN = "---"; 
             window.projectData = { outbound: { stops: [], routeName: "---", destZH: "---", destEN: "---", stopCounter: 0 }, inbound: { stops: [], routeName: "---", destZH: "---", destEN: "---", stopCounter: 0 } };
-            window._lastValidLat = null; window._lastValidLon = null; window._currentHeading = null;
+            window._lastValidLat = null; window._lastValidLon = null; window._currentHeading = null; window.playlistVideos = [];
             try { deleteRouteVideosFromDB(window.currentRouteId).catch(e=>{}); } catch(e) {}
             updateTabLabels(); renderAllStops(); showToast("已清空專案站點"); if(window.pushStateToFirebase) window.pushStateToFirebase();
         };
@@ -990,6 +1037,11 @@ window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status
             let msgHTML = isWaypoint ? `<div id="msg-${id}" style="font-size:12px; color:#0984e3; margin-top:5px; font-weight:bold;">📍 純中繼點 (不播影片)</div>` : `<div id="msg-${id}" style="font-size:12px; color:#d63031; margin-top:5px;">⚠️ 影片未設定</div>`;
             if (mergedSkipped) { msgHTML = `<div style="font-size:13px; color:#8e44ad; margin-top:5px; font-weight:bold;">🔗 與前站合併 (距離<30m)，已自動跳過</div>` + msgHTML; }
             if (stop.isZhinanFirst || stop.isZhinanSecond) { msgHTML += `<div style="font-size:13px; color:#e67e22; margin-top:5px; font-weight:bold;">⭐ 指南實小特例模式已啟動</div>`; }
+            
+            // ✨ 特別標示影片虛擬站 ✨
+            if (nameZH.includes('[影片開始]')) msgHTML = `<div style="font-size:13px; color:#e84393; margin-top:5px; font-weight:bold;">🎬 此站將自動隱藏並啟動影片輪播</div>`;
+            if (nameZH.includes('[影片結束]')) msgHTML = `<div style="font-size:13px; color:#e84393; margin-top:5px; font-weight:bold;">🛑 此站將自動隱藏並停止輪播</div>`;
+
             const disableUp = index === 0 ? 'disabled' : ''; const disableDown = index === window.stops.length - 1 ? 'disabled' : '';
             return `<div class="card ${cardClass}" id="card-${id}"><div class="card-body"><div class="header-top"><div><span style="font-weight:bold; font-size:18px; margin-right:5px;">第 ${index + 1} 站</span><div class="sort-controls admin-only"><button class="btn-sort" onclick="moveStop(${index}, -1)" ${disableUp}>▲</button><button class="btn-sort" onclick="moveStop(${index}, 1)" ${disableDown}>▼</button><button class="btn-sort jump" onclick="jumpStop(${index})">⤵</button></div></div><div class="switch-wrapper admin-only"><span class="switch-label" id="label-${id}" style="color:${statusColor}">${statusText}</span><label class="switch"><input type="checkbox" ${checkedAttr} onchange="toggleStop(${id})"><span class="slider"></span></label></div></div><div class="input-group" style="margin-bottom:10px;"><input type="text" id="namezh-${id}" value="${nameZH}" placeholder="中文站名" onchange="updateStopData(${id})"><input type="text" id="nameen-${id}" value="${nameEN}" placeholder="英文站名" onchange="updateStopData(${id})"></div><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;"><span id="dist-${id}" class="dist-text">-- m</span><div id="status-${id}" class="locked-msg">🔒 等待前一站...</div></div><div class="file-section admin-only" style="${hideFilesStyle}"><span class="file-label">📍 進入播放</span><input type="file" id="file-${id}" onchange="handleFileSelect(${id}, 'enter')"><div style="display:flex; align-items:center;"><button class="btn-select-file" id="btn-file-${id}" onclick="document.getElementById('file-${id}').click()" style="flex:1;">📂 選擇...</button><span class="dl-link" onclick="downloadTest(${id}, 'enter')">[📥]</span><span class="rm-link" onclick="clearVideo(${id}, 'enter')">[❌]</span></div></div><div class="file-section admin-only" style="${hideFilesStyle}"><span class="file-label">👋 離開播放</span><input type="file" id="file-exit-${id}" onchange="handleFileSelect(${id}, 'exit')"><div style="display:flex; align-items:center;"><button class="btn-select-file exit-file" id="btn-file-exit-${id}" onclick="document.getElementById('file-exit-${id}').click()" style="flex:1;">📂 選擇...</button><span class="dl-link" onclick="downloadTest(${id}, 'exit')">[📥]</span><span class="rm-link" onclick="clearVideo(${id}, 'exit')">[❌]</span></div></div>${msgHTML}<hr><div style="display:flex; gap:10px; margin-bottom:10px;"><div style="flex:1" class="admin-only"><div style="font-size:14px; font-weight:bold; color:#555; margin-bottom:5px;">⏰ 時間:</div><input type="time" id="time-${id}" value="${time}" onchange="updateStopData(${id})"></div><div style="flex:1" class="admin-only"><div style="font-size:14px; font-weight:bold; color:#555; margin-bottom:5px;">📍 半徑(m):</div><input type="number" id="rad-${id}" value="${rad}" onchange="updateStopData(${id})"></div></div><button class="btn-map admin-only" onclick="openMapPicker(${id})">🗺️ 地圖選點</button><div class="input-group admin-only"><input type="number" id="lat-${id}" value="${lat}" placeholder="緯度(Lat)" readonly style="background:#f5f5f5; color:#666"><input type="number" id="lon-${id}" value="${lon}" placeholder="經度(Lon)" readonly style="background:#f5f5f5; color:#666"></div><div id="debug-${id}" style="font-size:11px; color:#aaa; margin-top:5px; font-family:monospace;">等待啟動...</div></div><div class="card-footer"><label class="${waypointClass}"><input type="checkbox" ${waypointChecked} onchange="toggleWaypoint(${id})">📍 中繼站</label><label class="${checkpointClass}"><input type="checkbox" ${isCheckpoint ? 'checked' : ''} onchange="toggleCheckpoint(${id})">🏁 重啟點</label><label class="${muteClass}" style="${hideFilesStyle}"><input type="checkbox" ${muteChecked} onchange="toggleMute(${id})">🔇 靜音</label><button class="btn-delete admin-only" onclick="removeStop(${id})">🗑️ 刪除</button></div></div>`;
         }
@@ -1082,10 +1134,13 @@ window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status
             else if (mode === 'pids') {
                 try {
                     window.isTrackingPIDS = true; btnPIDS.innerText = "🛑 停止看板"; btnPIDS.classList.add('stop'); btnVideo.style.display = 'none';
-                    window.pidsCurrentIndex = window.stops.findIndex(s => s.enabled && !s.mergedSkipped); if(window.pidsCurrentIndex === -1) { alert("沒有啟用的站點"); window.stopTracking(); return; }
+                    // ✨ 找到第一個合法的 PIDS 站點
+                    window.pidsCurrentIndex = window.stops.findIndex(s => isPidsValid(s)); 
+                    if(window.pidsCurrentIndex === -1) { alert("沒有啟用的站點"); window.stopTracking(); return; }
+                    
                     pidsOverlay.style.display = 'flex'; document.body.style.overflow = 'hidden'; try { window.forceFullscreen(); } catch(e){}
                     window.isNextStopMode = true; document.getElementById('route-name-pids').innerText = window.routeName !== "---" ? window.routeName : "公車路線"; document.getElementById('dest-zh-pids').innerText = window.destZH !== "---" ? window.destZH : "往 終點站"; document.getElementById('dest-en-pids').innerText = window.destEN !== "---" ? window.destEN : "To Destination"; document.getElementById('status-text-pids').innerText = "下一站 | Next Stop";
-                    window.updatePidsDisplay(); updatePidsManualControlsState(); updatePidsClock(); pidsClockInterval = setInterval(updatePidsClock, 1000);
+                    window.updatePidsDisplay(); updatePidsClock(); pidsClockInterval = setInterval(updatePidsClock, 1000);
                     triggerPidsAnnouncement(window.pidsCurrentIndex, 'next'); startPidsCycle();
                 } catch(e) { console.error("看板啟動錯誤:", e); }
             }
@@ -1116,11 +1171,13 @@ window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status
 
         window.stopTracking = function() { 
             if (watchId !== null) navigator.geolocation.clearWatch(watchId); if (checkIntervalId !== null) clearInterval(checkIntervalId); if (wakeLock !== null) { wakeLock.release().then(() => { wakeLock = null; }); } 
-            window.isTrackingVideo = false; window.isTrackingPIDS = false; btnVideo.innerText = "🚀 啟動影片導航"; btnVideo.classList.remove('stop'); btnVideo.style.display = 'block'; btnPIDS.innerText = "🚌 啟動公車看板"; btnPIDS.classList.remove('stop'); btnPIDS.style.display = 'block'; elHeartbeat.innerHTML = '<span class="stopped">已停止</span>'; closeVideo(); 
+            window.isTrackingVideo = false; window.isTrackingPIDS = false; btnVideo.innerText = "🚀 啟動影片導航"; btnVideo.classList.remove('stop'); btnVideo.style.display = 'block'; btnPIDS.innerText = "🚌 啟動公車看板"; btnPIDS.classList.remove('stop'); btnPIDS.style.display = 'block'; elHeartbeat.innerHTML = '<span class="stopped">已停止</span>'; 
+            window.stopPlaylist(); // ✨ 確保停止時也關閉輪播
+            
             document.querySelectorAll('.card').forEach(c => { c.classList.remove('active', 'active-exit', 'locked', 'passed', 'waiting'); c.querySelector('.locked-msg').style.display = 'none'; });
             pidsOverlay.style.display = 'none'; document.body.style.overflow = 'auto'; stopPidsCycle(); if (pidsClockInterval) { clearInterval(pidsClockInterval); pidsClockInterval = null; }
             if (window._activeAudio) { try { window._activeAudio.pause(); } catch(e){} window._activeAudio = null; } if (window._activeAudioCleanup) window._activeAudioCleanup(); if (window.speechSynthesis) window.speechSynthesis.cancel(); if (window._activeTTSCleanup) window._activeTTSCleanup(); if (window._activeDelayCleanup) window._activeDelayCleanup();
-            pidsPlayQueue = []; window.pidsIsPlaying = false; pidsAnnounceId++; if (switchTimer) clearInterval(switchTimer); document.getElementById('pids-switch-modal').style.display = 'none'; updatePidsManualControlsState(); 
+            pidsPlayQueue = []; window.pidsIsPlaying = false; pidsAnnounceId++; if (switchTimer) clearInterval(switchTimer); document.getElementById('pids-switch-modal').style.display = 'none'; 
             if(window.pushStateToFirebase) window.pushStateToFirebase();
         }
 
@@ -1191,7 +1248,6 @@ window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status
                 if (dDist > 4) { window._currentHeading = getBearing(window._lastValidLat, window._lastValidLon, lat, lon); window._lastValidLat = lat; window._lastValidLon = lon; }
             } else { window._lastValidLat = lat; window._lastValidLon = lon; }
 
-            updatePidsManualControlsState();
             if (window.isTrackingVideo || window.isTrackingPIDS) { 
                 let hasTriggeredAnyGlobal = window.stops.some(s => s.enterTriggered);
                 let closestValidStopIdx = -1;
@@ -1214,8 +1270,6 @@ window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status
             }
         }
 
-        function updatePidsManualControlsState() { const manualOverlay = document.getElementById('pids-manual-controls'); if (window.isTrackingPIDS && hasFirstFix) { manualOverlay.style.display = 'none'; } else { manualOverlay.style.display = 'flex'; } }
-
         function checkDist(stop, curLat, curLon, index, expectedNextIdx, hasTriggeredAnyGlobal, closestValidStopIdx) { 
             if (!stop.enabled || stop.mergedSkipped) return; 
             if (window.isSeqMode && index < currentMaxIndex) { document.getElementById('dist-' + stop.id).innerText = "Pass"; document.getElementById('card-' + stop.id).classList.add('passed'); return; }
@@ -1224,6 +1278,8 @@ window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status
             const latVal = stop.lat; const lonVal = stop.lon; if (!latVal || !lonVal) return; 
             let radius = parseFloat(stop.rad); if (stop.isZhinanSecond) radius = 60;
             let distText = ""; let dist = getDist(curLat, curLon, parseFloat(latVal), parseFloat(lonVal)); 
+            
+            stop.distance = dist; 
             
             let canEarlyAnchorMain = (!window.isSeqMode || (!hasTriggeredAnyGlobal && window._requireStrictStartIdx === -1) || index === expectedNextIdx || index <= currentMaxIndex);
             if (canEarlyAnchorMain && stop.entryLat === null && dist <= radius) { stop.entryLat = curLat; stop.entryLon = curLon; stop.enterTime = Date.now(); }
@@ -1363,7 +1419,10 @@ window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status
                 if (stop.isWaypoint) { 
                     stop.exitTriggered = true; lastGlobalExitTime = Date.now(); lastStationActivityTime = Date.now(); document.getElementById(`card-${stop.id}`).classList.add('active'); setTimeout(() => { const el = document.getElementById(`card-${stop.id}`); if(el) el.classList.remove('active'); }, 2000); 
                     saveCurrentToProject(); 
-                    if (nextIdx !== -1) { if (window.isTrackingPIDS) { window.pidsCurrentIndex = nextIdx; window.isNextStopMode = true; document.getElementById('status-text-pids').innerText = "下一站 | Next Stop"; updatePidsDisplay(); triggerPidsAnnouncement(window.pidsCurrentIndex, 'next'); } } 
+                    
+                    let nextPidsIdx = -1; for (let j = index + 1; j < window.stops.length; j++) { if (isPidsValid(window.stops[j])) { nextPidsIdx = j; break; } }
+                    
+                    if (nextPidsIdx !== -1) { if (window.isTrackingPIDS) { window.pidsCurrentIndex = nextPidsIdx; window.isNextStopMode = true; document.getElementById('status-text-pids').innerText = "下一站 | Next Stop"; updatePidsDisplay(); triggerPidsAnnouncement(window.pidsCurrentIndex, 'next'); } } 
                     else { 
                         if (window.currentDirection === 'outbound' && window.projectData.inbound && window.projectData.inbound.stops.length > 0) { window.promptDirectionSwitch('inbound'); } 
                         else if (window.isLoopMode && window.currentDirection === 'inbound' && window.projectData.outbound && window.projectData.outbound.stops.length > 0) { window.promptDirectionSwitch('outbound'); } 
@@ -1371,8 +1430,21 @@ window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status
                     }
                 } else { 
                     document.getElementById(`card-${stop.id}`).classList.add('active'); document.getElementById(`card-${stop.id}`).classList.remove('active-exit'); 
-                    if (window.isTrackingVideo && stop.file) { playVideo(stop.id, stop.file, stop.muted); }
-                    if (window.isTrackingPIDS) { window.pidsCurrentIndex = index; window.isNextStopMode = false; document.getElementById('status-text-pids').innerText = "即將抵達 | Arriving"; window.updatePidsDisplay(); triggerPidsAnnouncement(window.pidsCurrentIndex, 'arr'); }
+                    
+                    // ✨ 觸發影片輪播邏輯 ✨
+                    if (stop.nameZH.includes('[影片開始]')) {
+                        window.startPlaylist();
+                    } else if (stop.nameZH.includes('[影片結束]')) {
+                        window.stopPlaylist();
+                        
+                        let nextPidsIdx = -1; for (let j = index + 1; j < window.stops.length; j++) { if (isPidsValid(window.stops[j])) { nextPidsIdx = j; break; } }
+                        if (nextPidsIdx !== -1 && window.isTrackingPIDS) {
+                            window.pidsCurrentIndex = nextPidsIdx; window.isNextStopMode = true; document.getElementById('status-text-pids').innerText = "下一站 | Next Stop"; updatePidsDisplay(); triggerPidsAnnouncement(window.pidsCurrentIndex, 'next');
+                        }
+                    } else {
+                        if (window.isTrackingVideo && stop.file) { playVideo(stop.id, stop.file, stop.muted); }
+                        if (window.isTrackingPIDS) { window.pidsCurrentIndex = index; window.isNextStopMode = false; document.getElementById('status-text-pids').innerText = "即將抵達 | Arriving"; window.updatePidsDisplay(); triggerPidsAnnouncement(window.pidsCurrentIndex, 'arr'); }
+                    }
                 }
             } 
 
@@ -1444,18 +1516,23 @@ window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status
                     if (window.isTrackingVideo) { if (stop.exitFile) { playVideo(stop.id, stop.exitFile, stop.muted); document.getElementById(`card-${stop.id}`).classList.remove('active'); document.getElementById(`card-${stop.id}`).classList.add('active-exit'); } else { if (!isStickyLoop && !window.isSeqMode) { if(currentPlayingId === stop.id) { closeVideo(); document.getElementById(`card-${stop.id}`).classList.remove('active'); } } } }
                     saveCurrentToProject();
 
-                    if (window.isTrackingPIDS) {
-                        if (nextIdx !== -1) {
-                            window.pidsCurrentIndex = nextIdx; window.isNextStopMode = true; document.getElementById('status-text-pids').innerText = "下一站 | Next Stop"; updatePidsDisplay(); triggerPidsAnnouncement(window.pidsCurrentIndex, 'next');
+                    if (!stop.nameZH.includes('[影片開始]') && !stop.nameZH.includes('[影片結束]')) {
+                        if (window.isTrackingPIDS) {
+                            let nextPidsIdx = -1; for (let j = index + 1; j < window.stops.length; j++) { if (isPidsValid(window.stops[j])) { nextPidsIdx = j; break; } }
+                            
+                            if (nextPidsIdx !== -1) {
+                                window.pidsCurrentIndex = nextPidsIdx; window.isNextStopMode = true; document.getElementById('status-text-pids').innerText = "下一站 | Next Stop"; updatePidsDisplay(); triggerPidsAnnouncement(window.pidsCurrentIndex, 'next');
+                            } else {
+                                if (window.currentDirection === 'outbound' && window.projectData.inbound && window.projectData.inbound.stops.length > 0) { window.promptDirectionSwitch('inbound'); } 
+                                else if (window.isLoopMode && window.currentDirection === 'inbound' && window.projectData.outbound && window.projectData.outbound.stops.length > 0) { window.promptDirectionSwitch('outbound'); } 
+                                else { pidsAnnounceId++; try{pidsGlobalAudio.pause();}catch(e){} if (window.speechSynthesis) window.speechSynthesis.cancel(); pidsPlayQueue = []; pushQA('common', '終點站到了', 0, true); window.pidsIsPlaying = false; processPidsQueue(pidsAnnounceId); }
+                            }
                         } else {
-                            if (window.currentDirection === 'outbound' && window.projectData.inbound && window.projectData.inbound.stops.length > 0) { window.promptDirectionSwitch('inbound'); } 
-                            else if (window.isLoopMode && window.currentDirection === 'inbound' && window.projectData.outbound && window.projectData.outbound.stops.length > 0) { window.promptDirectionSwitch('outbound'); } 
-                            else { pidsAnnounceId++; try{pidsGlobalAudio.pause();}catch(e){} if (window.speechSynthesis) window.speechSynthesis.cancel(); pidsPlayQueue = []; pushQA('common', '終點站到了', 0, true); window.pidsIsPlaying = false; processPidsQueue(pidsAnnounceId); }
-                        }
-                    } else {
-                        if (nextIdx === -1) { 
-                            if (window.currentDirection === 'outbound' && window.projectData.inbound && window.projectData.inbound.stops.length > 0) { window.promptDirectionSwitch('inbound'); } 
-                            else if (window.isLoopMode && window.currentDirection === 'inbound' && window.projectData.outbound && window.projectData.outbound.stops.length > 0) { window.promptDirectionSwitch('outbound'); } 
+                            let nextPidsIdx = -1; for (let j = index + 1; j < window.stops.length; j++) { if (isPidsValid(window.stops[j])) { nextPidsIdx = j; break; } }
+                            if (nextPidsIdx === -1) { 
+                                if (window.currentDirection === 'outbound' && window.projectData.inbound && window.projectData.inbound.stops.length > 0) { window.promptDirectionSwitch('inbound'); } 
+                                else if (window.isLoopMode && window.currentDirection === 'inbound' && window.projectData.outbound && window.projectData.outbound.stops.length > 0) { window.promptDirectionSwitch('outbound'); } 
+                            }
                         }
                     }
                 }
@@ -1463,7 +1540,37 @@ window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status
             if (window.isTrackingVideo && stop.exitTriggered && currentPlayingId === stop.id) { const d = stop.entryLat ? getDist(curLat, curLon, stop.entryLat, stop.entryLon) : dist; if (d > (radius + 500)) { if (!isStickyLoop && !window.isSeqMode) { closeVideo(); document.getElementById(`card-${stop.id}`).classList.remove('active-exit'); } } }
         }
 
-        function playVideo(id, file, startMuted) { isStickyLoop = false; currentPlayingId = id; videoOverlay.style.display = "flex"; errorMsg.style.display = "none"; const url = URL.createObjectURL(file); video.src = url; attemptFullscreen(); video.muted = startMuted ? true : false; video.volume = window._globalVolume; video.onended = function() { video.muted = true; video.play(); }; video.onerror = function() { errorMsg.style.display = "block"; }; var playPromise = video.play(); if (playPromise !== undefined) { playPromise.catch(error => { video.muted = true; video.play(); }); } }
+        // ✨ 影片輪播播放引擎 ✨
+        window.startPlaylist = function() {
+            if (!window.playlistVideos || window.playlistVideos.length === 0) return;
+            window._isPlaylistPlaying = true;
+            window._playlistIndex = 0;
+            playPlaylistVideo();
+        }
+        
+        window.playPlaylistVideo = function() {
+            if (!window._isPlaylistPlaying) return;
+            if (window._playlistIndex >= window.playlistVideos.length) window._playlistIndex = 0;
+            
+            const videoData = window.playlistVideos[window._playlistIndex];
+            videoOverlay.style.display = "flex"; errorMsg.style.display = "none";
+            video.src = videoData.url; video.muted = false; video.volume = window._globalVolume;
+            attemptFullscreen();
+            
+            video.onended = function() {
+                if (window._isPlaylistPlaying) { window._playlistIndex++; playPlaylistVideo(); }
+            };
+            video.onerror = function() {
+                if (window._isPlaylistPlaying) { window._playlistIndex++; playPlaylistVideo(); }
+            };
+            video.play().catch(e => { video.muted = true; video.play(); });
+        }
+        
+        window.stopPlaylist = function() {
+            if (window._isPlaylistPlaying) { window._isPlaylistPlaying = false; closeVideo(); }
+        }
+
+        function playVideo(id, file, startMuted) { window._isPlaylistPlaying = false; isStickyLoop = false; currentPlayingId = id; videoOverlay.style.display = "flex"; errorMsg.style.display = "none"; const url = URL.createObjectURL(file); video.src = url; attemptFullscreen(); video.muted = startMuted ? true : false; video.volume = window._globalVolume; video.onended = function() { video.muted = true; video.play(); }; video.onerror = function() { errorMsg.style.display = "block"; }; var playPromise = video.play(); if (playPromise !== undefined) { playPromise.catch(error => { video.muted = true; video.play(); }); } }
         window.closeVideo = function() { exitFullscreen(); video.pause(); video.onended = null; videoOverlay.style.display = "none"; video.src = ""; currentPlayingId = null; };
         function attemptFullscreen() { try{const elem = document.documentElement; if (elem.requestFullscreen) { elem.requestFullscreen().catch(err => {}); } else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }}catch(e){} }
         
@@ -1525,12 +1632,12 @@ window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status
         function triggerPidsAnnouncement(stationIdx, mode) {
             try {
                 const s = window.stops[stationIdx]; if (!s) return;
-                
+
                 const bMode = document.getElementById('pids-broadcast-mode') ? document.getElementById('pids-broadcast-mode').value : 'both';
                 if (bMode === 'next_only' && mode === 'arr') return;
                 if (bMode === 'arr_only' && mode === 'next') return;
                 if (bMode === 'smart' && mode === 'arr') {
-                    let prevIdx = -1; for (let i = stationIdx - 1; i >= 0; i--) { if (window.stops[i].enabled && !window.stops[i].mergedSkipped) { prevIdx = i; break; } }
+                    let prevIdx = -1; for (let i = stationIdx - 1; i >= 0; i--) { if (isPidsValid(window.stops[i])) { prevIdx = i; break; } }
                     if (prevIdx !== -1 && window.stops[prevIdx].lat && window.stops[prevIdx].lon && s.lat && s.lon) {
                         if (getDist(parseFloat(window.stops[prevIdx].lat), parseFloat(window.stops[prevIdx].lon), parseFloat(s.lat), parseFloat(s.lon)) < 300) return; 
                     }
@@ -1545,20 +1652,20 @@ window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status
                 const formatEl = document.getElementById('pids-arr-format'); const format = formatEl ? formatEl.value : 'auto';
                 const l1 = document.getElementById('pids-l1') ? document.getElementById('pids-l1').value : 'zh'; const l2 = document.getElementById('pids-l2') ? document.getElementById('pids-l2').value : 'en'; const l3 = document.getElementById('pids-l3') ? document.getElementById('pids-l3').value : 'tw'; const l4 = document.getElementById('pids-l4') ? document.getElementById('pids-l4').value : 'hk'; const l5 = document.getElementById('pids-l5') ? document.getElementById('pids-l5').value : 'none';
                 const finalOrder = [...new Set([l1, l2, l3, l4, l5])].filter(l => l !== 'none');
-                
-                let lastIdx = -1; for (let i = window.stops.length - 1; i >= 0; i--) { if (window.stops[i].enabled && !window.stops[i].mergedSkipped) { lastIdx = i; break; } }
+
+                let lastIdx = -1; for (let i = window.stops.length - 1; i >= 0; i--) { if (isPidsValid(window.stops[i])) { lastIdx = i; break; } }
                 const isTerm = (stationIdx === lastIdx);
-                // ✨ 智慧靜音分流器 (Smart Handoff) ✨
+                
                 if (window._remoteIsAlive && window._isHostConnected) {
-                    // 手機活著！主機閉嘴，把播報任務丟上雲端交給手機
                     fbSetRef(fbRef(fbDb, 'buses/' + window._currentBusId + '/audio_trigger'), {
                         id: Date.now(), 
                         mode: mode, 
                         zh: s.nameZH, 
                         en: s.nameEN, 
-                        isTerm: isTerm
+                        isTerm: isTerm,
+                        dist: s.distance
                     });
-                    return; // 主機直接結束任務，不發出聲音！
+                    return; 
                 }
                 const hasTerm = !!findPidsAudio('common', '終點站') || finalOrder.some(l => getPrefixSuffix(l, '終點站'));
                 const hasTermArr = !!findPidsAudio('common', '終點站到了') || finalOrder.some(l => getPrefixSuffix(l, '終點站到了'));
@@ -1578,7 +1685,7 @@ window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status
                 } else if (mode === 'arr') {
                     let useSuffix = false;
                     if (format === 'auto') { useSuffix = !!findPidsAudio('common', '到了'); if (!useSuffix) { useSuffix = finalOrder.some(l => getPrefixSuffix(l, '到了')); } } else if (format === 'suffix') { useSuffix = true; }
-                    
+
                     finalOrder.forEach((lang, index) => {
                         if (isTerm && hasTermArr) {
                             pushQA(lang, '終點站到了', index); addLangToQueue(lang);
@@ -1599,7 +1706,7 @@ window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status
             const container = document.getElementById('route-list-container-pids'); container.innerHTML = ''; 
             let start = Math.max(0, window.pidsCurrentIndex - 1); let end = Math.min(window.stops.length - 1, window.pidsCurrentIndex + 3);
             for (let i = start; i <= end; i++) {
-                const station = window.stops[i]; if(!station || !station.enabled || station.mergedSkipped) continue; 
+                const station = window.stops[i]; if(!station || !isPidsValid(station)) continue; 
                 const div = document.createElement('div'); div.className = 'stop-item-pids';
                 let lineHTML = ''; if (i > start || (start === 0 && i > 0)) lineHTML = '<div class="track-line-pids"></div>';
                 if (i < window.pidsCurrentIndex) div.classList.add('past');
@@ -1617,6 +1724,7 @@ window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status
         }
 
         window.pidsNextAction = function() {
+            window.stopPlaylist(); // 手動操作時中斷影片
             if (window.isTrackingPIDS && hasFirstFix && !window._useRemoteGps) return; 
             saveCurrentToProject(); 
             pidsIsShowingMap = false; const pageNext = document.getElementById('page-next-stop-pids'); const pageMap = document.getElementById('page-route-map-pids');
@@ -1624,20 +1732,17 @@ window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status
             if(pageMap) { pageMap.classList.remove('active'); pageMap.style.opacity = '0'; pageMap.style.pointerEvents = 'none'; }
             if (window.isNextStopMode) { window.isNextStopMode = false; document.getElementById('status-text-pids').innerText = "即將抵達 | Arriving"; window.updatePidsDisplay(); triggerPidsAnnouncement(window.pidsCurrentIndex, 'arr'); } 
             else {
-                let nextIdx = -1; for(let i = window.pidsCurrentIndex + 1; i < window.stops.length; i++) { if (window.stops[i].enabled && !window.stops[i].mergedSkipped) { nextIdx = i; break; } }
+                let nextIdx = -1; for(let i = window.pidsCurrentIndex + 1; i < window.stops.length; i++) { if (isPidsValid(window.stops[i])) { nextIdx = i; break; } }
                 if (nextIdx !== -1) { window.pidsCurrentIndex = nextIdx; window.isNextStopMode = true; document.getElementById('status-text-pids').innerText = "下一站 | Next Stop"; window.updatePidsDisplay(); triggerPidsAnnouncement(window.pidsCurrentIndex, 'next'); } 
                 else {
                     if (window.currentDirection === 'outbound' && window.projectData.inbound.stops.length > 0) { window.promptDirectionSwitch('inbound'); return; } 
-                    else if (window.isLoopMode) { if (window.currentDirection === 'inbound' && window.projectData.outbound.stops.length > 0) { window.promptDirectionSwitch('outbound'); return; } else { resetStopsState(); window.pidsCurrentIndex = window.stops.findIndex(s => s.enabled && !s.mergedSkipped); window.isNextStopMode = true; document.getElementById('status-text-pids').innerText = "下一站 | Next Stop"; window.updatePidsDisplay(); triggerPidsAnnouncement(window.pidsCurrentIndex, 'next'); } } 
+                    else if (window.isLoopMode) { if (window.currentDirection === 'inbound' && window.projectData.outbound.stops.length > 0) { window.promptDirectionSwitch('outbound'); return; } else { resetStopsState(); window.pidsCurrentIndex = window.stops.findIndex(s => isPidsValid(s)); window.isNextStopMode = true; document.getElementById('status-text-pids').innerText = "下一站 | Next Stop"; window.updatePidsDisplay(); triggerPidsAnnouncement(window.pidsCurrentIndex, 'next'); } } 
                     else { pidsAnnounceId++; try{pidsGlobalAudio.pause();}catch(e){} if (window.speechSynthesis) window.speechSynthesis.cancel(); pidsPlayQueue = []; pushQA('common', '終點站到了', 0, true); window.pidsIsPlaying = false; processPidsQueue(pidsAnnounceId); }
                 }
             } 
         }
 
-        window.pidsPrevStop = function() { if (window.isTrackingPIDS && hasFirstFix && !window._useRemoteGps) return; let prevIdx = -1; for(let i = window.pidsCurrentIndex - 1; i >= 0; i--) { if (window.stops[i].enabled && !window.stops[i].mergedSkipped) { prevIdx = i; break; } } if (prevIdx !== -1) { window.pidsCurrentIndex = prevIdx; window.isNextStopMode = true; document.getElementById('status-text-pids').innerText = "下一站 | Next Stop"; window.updatePidsDisplay(); } }
-
-        //document.getElementById('pidsClickZone').addEventListener('click', function(e) { if (window.isTrackingPIDS && hasFirstFix && !window._useRemoteGps) return; const clickX = e.clientX; const screenWidth = window.innerWidth; if (clickX > screenWidth / 2) window.pidsNextAction(); else window.pidsPrevStop(); });
-        //document.addEventListener('keydown', function(e) { if (!window.isTrackingPIDS) return; if (window.isTrackingPIDS && hasFirstFix && !window._useRemoteGps) return; if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); window.pidsNextAction(); } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { e.preventDefault(); window.pidsPrevStop(); } });
+        window.pidsPrevStop = function() { window.stopPlaylist(); if (window.isTrackingPIDS && hasFirstFix && !window._useRemoteGps) return; let prevIdx = -1; for(let i = window.pidsCurrentIndex - 1; i >= 0; i--) { if (isPidsValid(window.stops[i])) { prevIdx = i; break; } } if (prevIdx !== -1) { window.pidsCurrentIndex = prevIdx; window.isNextStopMode = true; document.getElementById('status-text-pids').innerText = "下一站 | Next Stop"; window.updatePidsDisplay(); } }
 
         function startPidsCycle() {
             if (pidsCycleInterval) clearInterval(pidsCycleInterval);
