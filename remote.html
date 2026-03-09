@@ -345,19 +345,27 @@
         };
         // --- 接收主機廣播訊號 ---
         let lastAudioId = null;
+        let isInitialAudioLoad = true; // ✨ 新開關：用來過濾連線瞬間的歷史訊號
+
         function listenToAudioTrigger() {
+            isInitialAudioLoad = true; // 每次連線重置
             unsubscribeAudio = onValue(ref(db, 'buses/' + currentBusId + '/audio_trigger'), (snap) => {
                 const data = snap.val();
-                if (data && data.id !== lastAudioId) {
+                if (!data) return;
+
+                // 🚀 第一步：如果是剛連線讀取到的歷史資料，記住 ID 但不播放
+                if (isInitialAudioLoad) {
+                    isInitialAudioLoad = false;
                     lastAudioId = data.id;
-                    
-                    // ✨ 歷史幽靈過濾器：檢查這個訊號是不是「新鮮」的 (10秒內發出的)
-                    // 因為 data.id 是主機發送當下的時間戳記，我們拿現在時間減掉它
-                    if (Date.now() - data.id < 10000) {
-                        triggerRemoteAnnouncement(data);
-                    } else {
-                        console.log("👻 攔截到過期的歷史語音訊號，已略過不播報！");
-                    }
+                    console.log("🗑️ 已自動隔離歷史舊訊號");
+                    return; 
+                }
+
+                // 🚀 第二步：只有真正的「新訊號」才觸發
+                if (data.id !== lastAudioId) {
+                    lastAudioId = data.id;
+                    showToast(`📡 收到新廣播：${data.zh}`);
+                    triggerRemoteAnnouncement(data);
                 }
             });
         }
@@ -384,37 +392,29 @@
         
         function triggerRemoteAnnouncement(data) {
             pidsAnnounceId++; const myId = pidsAnnounceId;
-            // 停止目前正在播放的聲音
             if (window._activeAudio) { try{window._activeAudio.pause();}catch(e){} window._activeAudio=null; }
             if (window._activeAudioCleanup) window._activeAudioCleanup(); 
             if (window.speechSynthesis) window.speechSynthesis.cancel();
             
-            pidsPlayQueue = []; 
-            window.pidsIsPlaying = false;
+            pidsPlayQueue = []; window.pidsIsPlaying = false;
             
-            // ✨ 播報模式與 300m 智慧攔截器 (修正版)
+            // ✨ 修正點：playMode 只在下面宣告一次
             const playMode = document.getElementById('pids-play-mode').value;
             if (playMode === 'next_only' && data.mode === 'arr') return;
             if (playMode === 'arr_only' && data.mode === 'next') return;
-            
-            // 只有在「明確知道距離且小於300m」的情況下才攔截
             if (playMode === 'smart' && data.mode === 'arr') {
-                if (typeof data.dist !== 'undefined' && data.dist !== null && data.dist < 300) {
-                    console.log("💡 智慧模式攔截：站距過近，不播報即將抵達");
+                if (data.dist && data.dist < 300) {
+                    console.log("💡 智慧攔截：站距過近，略過抵達廣播");
                     return; 
                 }
             }
 
             const format = document.getElementById('pids-arr-format').value;
-            const l1 = document.getElementById('pids-l1').value; 
-            const l2 = document.getElementById('pids-l2').value; 
-            const l3 = document.getElementById('pids-l3').value; 
-            const l4 = document.getElementById('pids-l4').value;
+            const l1 = document.getElementById('pids-l1').value; const l2 = document.getElementById('pids-l2').value; 
+            const l3 = document.getElementById('pids-l3').value; const l4 = document.getElementById('pids-l4').value;
             const finalOrder = [...new Set([l1, l2, l3, l4])].filter(l => l !== 'none');
             
-            const isTerm = data.isTerm; 
-            const sNameZH = data.zh; 
-            const sNameEN = data.en;
+            const isTerm = data.isTerm; const sNameZH = data.zh; const sNameEN = data.en;
             const hasTerm = !!findPidsAudio('common', '終點站') || finalOrder.some(l => getPrefixSuffix(l, '終點站'));
             const hasTermArr = !!findPidsAudio('common', '終點站到了') || finalOrder.some(l => getPrefixSuffix(l, '終點站到了'));
 
@@ -425,29 +425,18 @@
                 else if (lang === 'tw') url = findPidsAudio('tw', sNameZH); 
                 else if (lang === 'hk') url = findPidsAudio('hk', sNameZH); 
                 else if (lang === 'yue') { url = findPidsAudio('yue', sNameZH); ttsText = sNameZH; ttsLang = 'zh-HK'; }
-                
                 if (url) pidsPlayQueue.push({ type: 'audio', src: url }); 
                 else if (ttsText) pidsPlayQueue.push({ type: 'tts', text: ttsText, lang: ttsLang });
             };
 
             if (data.mode === 'next') {
-                finalOrder.forEach((lang, index) => { 
-                    pushQA(lang, '下一站', index); 
-                    if (isTerm && hasTerm) pushQA(lang, '終點站', index); 
-                    addLangToQueue(lang); 
-                });
+                finalOrder.forEach((lang, index) => { pushQA(lang, '下一站', index); if (isTerm && hasTerm) pushQA(lang, '終點站', index); addLangToQueue(lang); });
             } else if (data.mode === 'arr') {
                 let useSuffix = (format === 'suffix') || (format === 'auto' && (!!findPidsAudio('common', '到了') || finalOrder.some(l => getPrefixSuffix(l, '到了'))));
                 finalOrder.forEach((lang, index) => {
-                    if (isTerm && hasTermArr) { 
-                        pushQA(lang, '終點站到了', index); addLangToQueue(lang); 
-                    } else if (isTerm && hasTerm) { 
-                        if (useSuffix) { pushQA(lang, '終點站', index); addLangToQueue(lang); pushQA(lang, '到了', index); } 
-                        else { pushQA(lang, '即將抵達', index); pushQA(lang, '終點站', index); addLangToQueue(lang); } 
-                    } else { 
-                        if (useSuffix) { addLangToQueue(lang); pushQA(lang, '到了', index); } 
-                        else { pushQA(lang, '即將抵達', index); addLangToQueue(lang); } 
-                    }
+                    if (isTerm && hasTermArr) { pushQA(lang, '終點站到了', index); addLangToQueue(lang); } 
+                    else if (isTerm && hasTerm) { if (useSuffix) { pushQA(lang, '終點站', index); addLangToQueue(lang); pushQA(lang, '到了', index); } else { pushQA(lang, '即將抵達', index); pushQA(lang, '終點站', index); addLangToQueue(lang); } } 
+                    else { if (useSuffix) { addLangToQueue(lang); pushQA(lang, '到了', index); } else { pushQA(lang, '即將抵達', index); addLangToQueue(lang); } }
                 });
             }
             processPidsQueue(myId);
