@@ -286,8 +286,10 @@
                 
                 overlay.innerText = "下載語音包中 (檔案較大請稍候)...";
                 
-                // 2. 使用真實連結下載 (⚠️ 關鍵修復：這裡絕對不能帶 GitHub Token，否則會被伺服器擋下)
-                const zipRes = await fetch(fileData.download_url);
+                // 2. 使用真實連結下載 (因為是 Private 專案，所以還是要帶上 Token 給 raw.githubusercontent 驗證)
+                const zipRes = await fetch(fileData.download_url, { 
+                    headers: { 'Authorization': `token ${tokenInput}` } 
+                });
                 if (!zipRes.ok) throw new Error("下載壓縮檔本體失敗");
                 const zipBlob = await zipRes.blob(); 
                 
