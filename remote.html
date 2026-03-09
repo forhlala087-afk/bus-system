@@ -116,6 +116,21 @@
                 <select id="pids-l3" class="lang-select"><option value="zh">中文</option><option value="en">英文</option><option value="tw" selected>台語</option><option value="hk">客語</option><option value="yue">粵語</option><option value="none">無</option></select> ➔
                 <select id="pids-l4" class="lang-select"><option value="zh">中文</option><option value="en">英文</option><option value="tw">台語</option><option value="hk" selected>客語</option><option value="yue">粵語</option><option value="none">無</option></select>
             </div>
+            <div class="audio-setting-section">
+                <h4 style="margin-top:0;">3. 播報觸發模式</h4>
+                <select id="pids-play-mode" style="width:100%; margin-bottom:10px;">
+                    <option value="all" selected>智慧模式 (兩個都播)</option>
+                    <option value="next_only">只播「下一站」</option>
+                    <option value="arr_only">只播「即將抵達」</option>
+                </select>
+                <h4 style="margin-top:0;">4. 語音停頓間隔</h4>
+                <select id="pids-audio-gap" style="width:100%;">
+                    <option value="0">無間隔 (緊湊)</option>
+                    <option value="400">短停頓 (0.4秒)</option>
+                    <option value="800" selected>標準停頓 (0.8秒)</option>
+                    <option value="1200">長停頓 (1.2秒)</option>
+                </select>
+            </div>
             
             <div class="audio-setting-section">
                 <h4 style="margin-top:0;">2. 到站播報格式</h4>
@@ -153,7 +168,7 @@
         window.onload = async function() {
             document.getElementById('gh-repo-url').value = localStorage.getItem('remote_github_url') || '';
             document.getElementById('gh-token').value = localStorage.getItem('remote_github_token') || '';
-            ['l1', 'l2', 'l3', 'l4', 'arr-format'].forEach(k => { 
+            ['l1', 'l2', 'l3', 'l4', 'arr-format', 'play-mode', 'audio-gap'].forEach(k => { 
                 let el = document.getElementById('pids-'+k); let val = localStorage.getItem('remote_pids_'+k); 
                 if (el && val) el.value = val; 
             });
@@ -266,7 +281,7 @@
         async function savePidsAudioToDB(category, fileName, blob) { const db = await openPidsDB(); const tx = db.transaction(PIDS_STORE_NAME, "readwrite"); const key = `${category}___${fileName}`; tx.objectStore(PIDS_STORE_NAME).put(blob, key); }
         async function loadAllPidsAudioFromDB() { const db = await openPidsDB(); return new Promise((resolve) => { const tx = db.transaction(PIDS_STORE_NAME, "readonly"); const store = tx.objectStore(PIDS_STORE_NAME); const request = store.openCursor(); let loadedCounts = { common: 0, zh: 0, en: 0, tw: 0, hk: 0, yue: 0 }; request.onsuccess = (e) => { const cursor = e.target.result; if (cursor) { const key = cursor.key.toString(); const parts = key.split('___'); if (parts.length === 2) { const category = parts[0]; const fileName = parts[1]; const blob = cursor.value; if (window.pidsAssets[category]) { window.pidsAssets[category][fileName] = URL.createObjectURL(blob); loadedCounts[category]++; } } cursor.continue(); } else { resolve(loadedCounts); } }; }); }
         window.clearAllPidsAudioDB = async function() { if(!confirm("確定清空手機語音嗎？")) return; const db = await openPidsDB(); const tx = db.transaction(PIDS_STORE_NAME, "readwrite"); tx.objectStore(PIDS_STORE_NAME).clear(); window.pidsAssets = { common: {}, zh: {}, en: {}, tw: {}, hk: {}, yue: {} }; alert("✅ 已清空！"); };
-        window.savePidsDefaults = function() { ['l1', 'l2', 'l3', 'l4', 'arr-format'].forEach(k => { let el = document.getElementById('pids-'+k); if (el) localStorage.setItem('remote_pids_'+k, el.value); }); showToast("✅ 設定已儲存"); document.getElementById('audio-modal').style.display='none'; };
+        window.savePidsDefaults = function() { ['l1', 'l2', 'l3', 'l4', 'arr-format', 'play-mode', 'audio-gap'].forEach(k => { let el = document.getElementById('pids-'+k); if (el) localStorage.setItem('remote_pids_'+k, el.value); }); showToast("✅ 設定已儲存"); document.getElementById('audio-modal').style.display='none'; };
 
         window.syncGitHubAudio = async function() {
             const urlInput = document.getElementById('gh-repo-url').value.trim(); 
@@ -354,6 +369,10 @@
             if (window._activeAudio) { try{window._activeAudio.pause();}catch(e){} window._activeAudio=null; }
             if (window._activeAudioCleanup) window._activeAudioCleanup(); if (window.speechSynthesis) window.speechSynthesis.cancel();
             pidsPlayQueue = []; window.pidsIsPlaying = false; 
+            // ✨ 播報模式攔截器
+            const playMode = document.getElementById('pids-play-mode').value;
+            if (playMode === 'next_only' && data.mode === 'arr') return;
+            if (playMode === 'arr_only' && data.mode === 'next') return;
 
             const format = document.getElementById('pids-arr-format').value;
             const l1 = document.getElementById('pids-l1').value; const l2 = document.getElementById('pids-l2').value; const l3 = document.getElementById('pids-l3').value; const l4 = document.getElementById('pids-l4').value;
@@ -387,6 +406,7 @@
             while (pidsPlayQueue.length > 0) {
                 if (announceId !== pidsAnnounceId) break; 
                 const item = pidsPlayQueue.shift();
+                
                 if (item.type === 'audio') {
                     await new Promise((resolve) => {
                         let isDone = false; let timeoutId; const audio = new Audio(item.src); audio.volume = window._globalVolume; window._activeAudio = audio;
@@ -405,6 +425,12 @@
                             timeoutId = setTimeout(cleanup, 8000); window.speechSynthesis.speak(u);
                         } catch(e) { resolve(); }
                     });
+                }
+
+                // ✨ 語音停頓間隔引擎
+                const gapMs = parseInt(document.getElementById('pids-audio-gap').value) || 0;
+                if (pidsPlayQueue.length > 0 && gapMs > 0 && announceId === pidsAnnounceId) {
+                    await new Promise(r => setTimeout(r, gapMs));
                 }
             }
             if (announceId === pidsAnnounceId) window.pidsIsPlaying = false;
