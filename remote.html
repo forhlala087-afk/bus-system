@@ -371,7 +371,8 @@
             if (window._activeAudio) { try{window._activeAudio.pause();}catch(e){} window._activeAudio=null; }
             if (window._activeAudioCleanup) window._activeAudioCleanup(); if (window.speechSynthesis) window.speechSynthesis.cancel();
             pidsPlayQueue = []; window.pidsIsPlaying = false;
-            // ✨ 播報模式與 300m 智慧攔截器
+            
+            // ✨ 播報模式與 300m 智慧攔截器 (保留這組就好，舊的已經刪除了！)
             const playMode = document.getElementById('pids-play-mode').value;
             if (playMode === 'next_only' && data.mode === 'arr') return;
             if (playMode === 'arr_only' && data.mode === 'next') return;
@@ -382,10 +383,6 @@
                     return; 
                 }
             }
-            // ✨ 播報模式攔截器
-            const playMode = document.getElementById('pids-play-mode').value;
-            if (playMode === 'next_only' && data.mode === 'arr') return;
-            if (playMode === 'arr_only' && data.mode === 'next') return;
 
             const format = document.getElementById('pids-arr-format').value;
             const l1 = document.getElementById('pids-l1').value; const l2 = document.getElementById('pids-l2').value; const l3 = document.getElementById('pids-l3').value; const l4 = document.getElementById('pids-l4').value;
