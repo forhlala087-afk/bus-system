@@ -10,7 +10,6 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#1a1a1a">
 
-<title>GPS 導航 V168 (終極 APP 版)3</title>
 <title>GPS 導航 V168 (終極 APP 版)4</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -27,7 +26,7 @@
         ctx.font = '250px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillStyle = 'white'; ctx.fillText('🚌', 256, 280);
         const iconUrl = canvas.toDataURL('image/png');
-
+        
         // 2. 給蘋果 iOS 用的圖示
         const appleIcon = document.createElement('link');
         appleIcon.rel = 'apple-touch-icon';
@@ -56,13 +55,13 @@
 <style>
     /* 這裡保留你原本的 CSS 樣式，不用動 */
     body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; text-align: center; padding: 10px; background: #f0f2f5; padding-bottom: 200px; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
-
+    
     /* 權限隱藏魔法 */
     body:not(.admin-mode) .admin-only { display: none !important; }
     body:not(.auth-mode) .auth-only { display: none !important; }
-
+    
     /* ... (下略你原本的 CSS) ... */
-
+    
     .top-right-controls { position: absolute; top: 12px; right: 15px; display: flex; gap: 8px; z-index: 1000; }
     .btn-sys-login, .btn-sys-logout, .btn-sys-demote { background: #34495e; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
     .btn-sys-logout { background: #e74c3c; } .btn-sys-demote { background: #f39c12; }
@@ -129,7 +128,7 @@
     #pids-overlay .stop-item-pids.active { opacity: 1; } #pids-overlay .stop-item-pids.active .dot-pids { width: var(--dot-large); height: var(--dot-large); background-color: var(--highlight); box-shadow: 0 0 30px var(--highlight); border-width: 0; } #pids-overlay .stop-item-pids.active .stop-name-zh-pids { color: var(--highlight); font-size: 7vh; } #pids-overlay .stop-item-pids.active .stop-name-en-pids { color: var(--text-main); font-size: 3vh; }
     #pids-overlay .stop-item-pids.active.traveling .track-line-pids, #pids-overlay .stop-item-pids.active.arrived .track-line-pids { opacity: 1; background: repeating-linear-gradient(0deg, var(--highlight) 0px, var(--highlight) 20px, transparent 20px, transparent 40px); background-size: 100% 200%; } #pids-overlay .stop-item-pids.active.traveling .track-line-pids { animation: flowDownPids 1s linear infinite; } @keyframes flowDownPids { 0% { background-position: 0% 100%; } 100% { background-position: 0% 0%; } } #pids-overlay .stop-item-pids.active.traveling .dot-pids, #pids-overlay .stop-item-pids.active.arrived .dot-pids { animation: breathePids 2s infinite ease-in-out; } @keyframes breathePids { 0%, 100% { transform: scale(1); box-shadow: 0 0 30px var(--highlight); } 50% { transform: scale(1.1); box-shadow: 0 0 50px var(--highlight); } }
     .pids-setting-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; background: #f8f9fa; padding: 10px; border-radius: 8px; border-left: 4px solid #ced4da; } .pids-zip-btn, .pids-audio-btn, .pids-manage-btn { color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; border: none; } .pids-zip-btn { background: #8e44ad; } .pids-audio-btn { background: #2980b9; } .pids-manage-btn { background: #6c757d; } .pids-select, .lang-select { padding: 5px; border-radius: 4px; border: 1px solid #ccc; } .lang-select { width: 18%; } .pids-manual-overlay { position: absolute; bottom: 85px; right: 25px; z-index: 2147483647; background: rgba(0,0,0,0.6); border-radius: 8px; padding: 10px; display: none; gap: 10px; } .pids-manual-btn { background: #444; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; } .pids-clock { position: absolute; bottom: 25px; right: 25px; font-size: 3vh; font-weight: bold; color: rgba(255, 255, 255, 0.85); pointer-events: none; z-index: 2147483647; font-family: monospace; }
-
+    
     .direction-tabs { display: flex; margin-bottom: 15px; background: #fff; border-radius: 12px; padding: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); } .dir-tab { flex: 1; padding: 12px; border: none; background: transparent; font-size: 16px; font-weight: bold; color: #666; border-radius: 8px; cursor: pointer; } .dir-tab.active { background: #007bff; color: white; box-shadow: 0 2px 5px rgba(0,123,255,0.3); } .dir-tab#tab-inbound.active { background: #e67e22; box-shadow: 0 2px 5px rgba(230,126,34,0.3); } .btn-load-dir { background: #f1f3f5; border: 1px solid #ced4da; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; color: #495057; font-size: 13px; flex: 1; } .btn-load-dir.out { color: #007bff; border-color: #007bff; background: #e6f2ff; } .btn-load-dir.in { color: #e67e22; border-color: #e67e22; background: #fdf2e9; }
 
     #pids-switch-modal { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(30,30,30,0.95); color: white; padding: 30px; border-radius: 16px; z-index: 99999; text-align: center; border: 2px solid #0078d4; width: 80%; max-width: 450px; } .switch-title-pids { font-size: 3.5vh; font-weight: bold; margin-bottom: 15px; } .switch-desc-pids { font-size: 2.5vh; margin-bottom: 25px; color: #ccc; } .switch-countdown-text { color: #e74c3c; font-size: 5vh; font-weight: bold; margin: 0 10px; } .btn-switch-cancel, .btn-switch-confirm { flex: 1; padding: 15px; border-radius: 8px; color: white; border: none; font-size: 2.5vh; cursor: pointer; } .btn-switch-cancel { background: #555; } .btn-switch-confirm { background: #0078d4; font-weight: bold; }
@@ -142,7 +141,7 @@
 
     <h3>📍 GPS 導航 V168 APP版</h3>
     <p style="font-size:12px; color:#888; margin-top:-10px;">旗艦主機 + 遙控 GPS 雙核心版</p>
-
+    
     <div class="top-right-controls">
         <button id="btn-remote-pair" class="btn-remote" onclick="document.getElementById('remote-modal').style.display='flex'">📱 遙控器配對</button>
         <button id="btn-sys-login" class="btn-sys-login" onclick="document.getElementById('sys-login-modal').style.display='flex'">🔒 系統登入</button>
@@ -160,7 +159,7 @@
         <button class="btn-csv admin-only" onclick="document.getElementById('csv-input').click()" style="flex:1;">📄 CSV</button>
         <button class="btn-tdx" onclick="openTdxModal()" style="flex:2;">🌐 TDX</button>
     </div>
-
+    
     <input type="file" id="zip-input" accept=".zip" style="display:none" onchange="handleZipImport(this)">
     <input type="file" id="csv-input" accept=".csv" style="display:none" onchange="handleCSVImport(this)">
 
@@ -170,10 +169,10 @@
         <button class="btn-json-helper" onclick="downloadConfigJson()">📥 下載 JSON</button>
         <button class="btn-auto-checkpoint" onclick="autoSetCheckpoints()">🏁 自動判定重啟點</button>
     </div>
-
+    
     <button class="btn-add admin-only" onclick="addStop()">＋ 手動新增一站</button>
     <button class="btn-clear-all admin-only" onclick="clearAllStops()">🗑️ 清空專案 (含去/返程)</button>
-
+    
     <div id="stops-container"></div>
 
     <div class="bottom-bar">
@@ -268,14 +267,14 @@
     </div>
 
     <div id="save-modal" class="modal-overlay" style="z-index:32000;"><div class="modal-content"><div class="modal-header"><div class="header-title">💾 儲存專案</div><button onclick="document.getElementById('save-modal').style.display='none'" style="border:none;background:none;font-size:24px;cursor:pointer;">✕</button></div><div style="text-align: left; overflow-y: auto;"><label style="font-weight:bold; font-size:14px; color:#333;">📂 專案名稱：</label><input type="text" id="save-proj-name" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; margin-top:5px; margin-bottom:15px;" placeholder="例如: 307路"><label style="font-weight:bold; font-size:14px; color:#333;">🚌 路線編號(看板)：</label><input type="text" id="save-route-name" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; margin-top:5px; margin-bottom:15px;"><div style="background:#e6f2ff; padding:10px; border-radius:8px; margin-bottom:10px;"><div style="font-weight:bold; color:#0056b3; margin-bottom:5px;">🔵 去程往</div><div style="display:flex; gap:10px;"><input type="text" id="save-out-zh" placeholder="中文" style="flex:1; padding:8px; border-radius:6px; border:1px solid #ccc;"><input type="text" id="save-out-en" placeholder="英文" style="flex:1; padding:8px; border-radius:6px; border:1px solid #ccc;"></div></div><div style="background:#fdf2e9; padding:10px; border-radius:8px; margin-bottom:20px;"><div style="font-weight:bold; color:#c82333; margin-bottom:5px;">⚪ 返程往</div><div style="display:flex; gap:10px;"><input type="text" id="save-in-zh" placeholder="中文" style="flex:1; padding:8px; border-radius:6px; border:1px solid #ccc;"><input type="text" id="save-in-en" placeholder="英文" style="flex:1; padding:8px; border-radius:6px; border:1px solid #ccc;"></div></div><button onclick="confirmSaveRoute()" style="width:100%; padding:12px; border-radius:8px; background:#27ae60; color:white; font-size:16px; font-weight:bold; border:none; cursor:pointer;">✅ 確認儲存</button></div></div></div>
-
+    
     <div id="pids-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
                 <div class="header-title">⚙️ 看板與語音設定</div>
                 <button onclick="document.getElementById('pids-modal').style.display='none'" style="border:none;background:none;font-size:24px;cursor:pointer;">✕</button>
             </div>
-
+            
             <div style="background:#f0f8ff; padding:15px; border-radius:8px; margin-bottom:15px; border: 1px solid #cce5ff; text-align: left;">
                 <h4 style="margin:0 0 10px 0; color:#004085;">⚡ GitHub 極速私密同步</h4>
                 <div style="font-size:12px; color:#555; margin-bottom:10px;">請確保您的 GitHub 專案根目錄下有上傳 <b>audio.zip</b> 檔案。系統將一鍵下載並自動解壓至本地。</div>
@@ -288,13 +287,13 @@
                 <h4 style="margin:0;">1. 手動語音資料庫 (支援ZIP)</h4>
                 <button onclick="clearAllPidsAudioDB()" style="background:#ff4757; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:12px; cursor:pointer;">🗑️ 清空所有語音</button>
             </div>
-
+            
             <div class="pids-setting-item"><span>罐頭音效</span><div style="display:flex; gap:5px;"><label class="pids-zip-btn">Zip<input type="file" accept=".zip" onchange="handlePidsZip(this, 'common')"></label><label class="pids-audio-btn">單檔<input type="file" accept="audio/*" multiple onchange="handlePidsAudio(this, 'common')"></label><button class="pids-manage-btn" onclick="openPidsAudioManager('common')">管理</button></div></div>
             <div class="pids-setting-item"><span>中文站名</span><div style="display:flex; gap:5px;"><label class="pids-zip-btn">Zip<input type="file" accept=".zip" onchange="handlePidsZip(this, 'zh')"></label><label class="pids-audio-btn">單檔<input type="file" accept="audio/*" multiple onchange="handlePidsAudio(this, 'zh')"></label><button class="pids-manage-btn" onclick="openPidsAudioManager('zh')">管理</button></div></div>
             <div class="pids-setting-item"><span>英文站名</span><div style="display:flex; gap:5px;"><label class="pids-zip-btn">Zip<input type="file" accept=".zip" onchange="handlePidsZip(this, 'en')"></label><label class="pids-audio-btn">單檔<input type="file" accept="audio/*" multiple onchange="handlePidsAudio(this, 'en')"></label><button class="pids-manage-btn" onclick="openPidsAudioManager('en')">管理</button></div></div>
             <div class="pids-setting-item"><span>台語站名</span><div style="display:flex; gap:5px;"><label class="pids-zip-btn">Zip<input type="file" accept=".zip" onchange="handlePidsZip(this, 'tw')"></label><label class="pids-audio-btn">單檔<input type="file" accept="audio/*" multiple onchange="handlePidsAudio(this, 'tw')"></label><button class="pids-manage-btn" onclick="openPidsAudioManager('tw')">管理</button></div></div>
             <div class="pids-setting-item"><span>客語站名</span><div style="display:flex; gap:5px;"><label class="pids-zip-btn">Zip<input type="file" accept=".zip" onchange="handlePidsZip(this, 'hk')"></label><label class="pids-audio-btn">單檔<input type="file" accept="audio/*" multiple onchange="handlePidsAudio(this, 'hk')"></label><button class="pids-manage-btn" onclick="openPidsAudioManager('hk')">管理</button></div></div>
-
+            
             <h4 style="margin:15px 0 5px 0;">2. 播報順序設定</h4>
             <div style="display:flex; justify-content:space-between; flex-wrap: wrap; gap: 5px;">
                 <select id="pids-l1" class="lang-select"><option value="zh" selected>中文</option><option value="en">英文</option><option value="tw">台語</option><option value="hk">客語</option><option value="yue">粵語</option><option value="none">無</option></select> ➔
@@ -303,17 +302,17 @@
                 <select id="pids-l4" class="lang-select"><option value="zh">中文</option><option value="en">英文</option><option value="tw">台語</option><option value="hk" selected>客語</option><option value="yue">粵語</option><option value="none">無</option></select> ➔
                 <select id="pids-l5" class="lang-select"><option value="zh">中文</option><option value="en">英文</option><option value="tw">台語</option><option value="hk">客語</option><option value="yue">粵語</option><option value="none" selected>無</option></select>
             </div>
-
+            
             <h4 style="margin:15px 0 5px 0;">3. 語音間隔</h4><div style="display:flex; align-items:center; gap:10px;"><input type="number" id="pids-delay" value="0.3" min="0" step="0.1" style="width:60px; padding:5px;"> 秒</div>
             <h4 style="margin:15px 0 5px 0;">4. 到站播報格式</h4><div style="display:flex; align-items:center; gap:10px;"><select id="pids-arr-format" class="pids-select" style="width:100%"><option value="auto" selected>自動偵測</option><option value="prefix">強制：[即將抵達] ➔ [站名]</option><option value="suffix">強制：[站名] ➔ [到了]</option></select></div>
             <h4 style="margin:15px 0 5px 0;">5. 播報模式設定</h4><div style="display:flex; align-items:center; gap:10px;"><select id="pids-broadcast-mode" class="pids-select" style="width:100%"><option value="both" selected>兩個都播 (下一站 + 即將抵達)</option><option value="next_only">只播下一站 (進站靜音)</option><option value="arr_only">只播即將抵達 (離站靜音)</option><option value="smart">智慧模式 (站距小於300m時自動省略即將抵達)</option></select></div>
-
+            
             <button onclick="savePidsDefaults()" style="width:100%; padding:12px; border-radius:8px; background:#28a745; color:white; font-size:15px; font-weight:bold; border:none; cursor:pointer; margin-top:20px;">💾 儲存並設為預設值</button>
         </div>
     </div>
-
+    
     <div id="pids-audio-manager-modal" class="modal-overlay" style="z-index: 31000;"><div class="modal-content"><div class="modal-header"><div class="header-title" id="pids-audio-manager-title">管理音檔</div><button onclick="closePidsAudioManager()" style="border:none; background:none; font-size:24px; cursor:pointer;">✕</button></div><div id="pids-audio-list" style="overflow-y: auto; flex:1;"></div></div></div>
-
+    
     <div id="pids-overlay">
         <div class="pids-header" id="header-bar-pids"><div class="route-info-pids" id="route-name-pids">---</div><div class="status-title-pids" id="status-text-pids">下一站 | Next Stop</div><div class="destination-group-pids"><span class="arrow-icon-pids">➔</span><div class="dest-text-pids"><div class="dest-zh-pids" id="dest-zh-pids">---</div><div class="dest-en-pids" id="dest-en-pids">---</div></div></div></div>
         <div class="viewport-pids" id="pidsClickZone"><div id="page-next-stop-pids" class="page-pids active"><div class="main-station" id="big-zh-pids">準備中</div><div class="sub-station" id="big-en-pids">Ready</div></div><div id="page-route-map-pids" class="page-pids"><div class="route-container-pids" id="route-list-container-pids"></div></div></div>
@@ -322,10 +321,10 @@
         <div class="pids-manual-overlay" id="pids-manual-controls"><button class="pids-manual-btn" onclick="pidsPrevStop()">◀ 上一站</button><button class="pids-manual-btn" onclick="pidsNextAction()">▶ 下一站/抵達</button></div>
         <div id="pids-clock" class="pids-clock">現在時間：--:--</div>
     </div>
-
+    
     <div id="toast">訊息提示</div>
     <div id="loading-overlay"><div class="loader"></div><div id="loading-text" style="font-size:18px; font-weight:bold; color:#333; text-align:center;">處理中...</div></div>
-
+    
     <div id="route-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><div class="header-title">📂 路線列表</div><div class="header-actions"><button class="btn-io admin-only" onclick="document.getElementById('import-file').click()">📥 匯入</button><button class="btn-io admin-only" onclick="exportRoutesFile()">📤 匯出</button><button onclick="closeRouteList()" style="border:none; background:none; font-size:24px; margin-left:10px;">✕</button></div></div><div id="route-list-container"></div></div></div>
     <div id="map-modal" class="modal-overlay"><div class="modal-content" id="map-modal-content"><div class="modal-header"><span>📍 地圖選點 (範圍 <span id="map-radius-display">150</span>m)</span></div><div id="map"></div><div style="display:flex; gap:10px; margin-top:10px;"><button style="flex:1; padding:12px; border-radius:8px; border:1px solid #ccc;" onclick="closeMap()">取消</button><button style="flex:2; padding:12px; border-radius:8px; border:none; background:#27ae60; color:white; font-weight:bold;" onclick="confirmMapLocation()">✅ 確認座標</button></div></div></div>
     <div id="video-overlay"><video id="mainVideo" playsinline webkit-playsinline></video><div id="error-msg">影片無法播放</div><button class="btn-close-x" onclick="closeVideo()">✕</button><button class="btn-fullscreen" onclick="forceFullscreen()">⛶</button></div>
@@ -345,7 +344,7 @@
         window.projectData = { outbound: { stops: [], routeName: "---", destZH: "---", destEN: "---", stopCounter: 0 }, inbound: { stops: [], routeName: "---", destZH: "---", destEN: "---", stopCounter: 0 } };
         window.currentDirection = 'outbound'; window.stops = []; window.stopCounter = 0; window.routeName = "---", window.destZH = "---", window.destEN = "---";
         window.isTrackingVideo = false; window.isTrackingPIDS = false; window.pidsCurrentIndex = 0; 
-
+        
         let watchId = null; let wakeLock = null; let lastUpdateTimestamp = 0; let checkIntervalId = null; let currentPlayingId = null;
         let map = null; let currentMarker = null; let currentCircle = null; let editingStopId = null; let currentEditingRadius = 150; window.currentRouteId = "temp"; 
         window.isLoopMode = false; window.isSeqMode = true; let isStickyLoop = false; let hasFirstFix = false; let currentMaxIndex = -1; let lastGlobalExitTime = 0; let lastStationActivityTime = 0;
@@ -356,7 +355,7 @@
         window.pidsAssets = { common: {}, zh: {}, en: {}, tw: {}, hk: {}, yue: {} };
         let pidsPlayQueue = []; window.pidsIsPlaying = false; let pidsAnnounceId = 0; const pidsGlobalAudio = new Audio();
         window.isNextStopMode = true; let pidsCycleInterval = null; let pidsIsShowingMap = false; let pidsClockInterval = null;
-
+        
         const container = document.getElementById('stops-container'); const video = document.getElementById('mainVideo'); const videoOverlay = document.getElementById('video-overlay'); const pidsOverlay = document.getElementById('pids-overlay'); const errorMsg = document.getElementById('error-msg'); const elLastTime = document.getElementById('last-time'); const elHeartbeat = document.getElementById('heartbeat-counter'); const mapModal = document.getElementById('map-modal'); const routeModal = document.getElementById('route-modal'); const routeListContainer = document.getElementById('route-list-container'); const radiusDisplay = document.getElementById('map-radius-display'); const btnVideo = document.getElementById('toggleBtnVideo'); const btnPIDS = document.getElementById('toggleBtnPIDS'); const loadingOverlay = document.getElementById('loading-overlay'); const loadingText = document.getElementById('loading-text');
 
         // ==========================================
@@ -370,7 +369,7 @@
             // 💾 記憶車號與GPS設定
             localStorage.setItem('gps_saved_bus_id', busId);
             localStorage.setItem('gps_saved_use_remote', window._useRemoteGps);
-
+            
             const btnConnect = document.getElementById('btn-host-connect');
             btnConnect.innerText = "連線中...";
 
@@ -430,7 +429,7 @@
                         }
                     }
                 });
-
+                
                 pushStateToFirebase();
                 btnConnect.innerText = "✅ 雲端綁定成功";
                 btnConnect.style.background = "#27ae60";
@@ -596,11 +595,11 @@
                 let fallbackRouteName = "---", fallbackDestZH = "---", fallbackDestEN = "---"; const baseName = file.name.replace(/\.zip$/i, "").trim(); const matchTo = baseName.match(/^(.+?)\s+(.+?)\s+(To\s*.+)$/i);
                 if (matchTo) { fallbackRouteName = matchTo[1].trim(); fallbackDestZH = matchTo[2].trim(); fallbackDestEN = matchTo[3].trim(); } else { const parts = baseName.split(/\s+/); if (parts.length >= 3) { fallbackRouteName = parts[0]; fallbackDestZH = parts[1]; fallbackDestEN = parts.slice(2).join(' '); } else if (parts.length === 2) { fallbackRouteName = parts[0]; fallbackDestZH = parts[1]; } else if (parts.length === 1 && parts[0] !== "") { fallbackRouteName = parts[0]; } }
                 if (window.routeName === "---") window.routeName = fallbackRouteName; if (window.destZH === "---") window.destZH = fallbackDestZH; if (window.destEN === "---") window.destEN = fallbackDestEN;
-
+                
                 const zip = await JSZip.loadAsync(file); let configData = null; let csvAddedCount = 0; let pidsMsg = ""; const configFiles = zip.file(/config\.json$/i); const csvFiles = zip.file(/\.csv$/i);
                 if (configFiles.length > 0) { const content = await configFiles[0].async("text"); try { configData = JSON.parse(content); } catch(e) { alert("config.json 錯誤"); } } else if (csvFiles.length > 0) { const content = await csvFiles[0].async("text"); csvAddedCount = parseCSVText(content); }
                 window.currentRouteId = "temp_zip_" + Date.now(); localStorage.setItem('gps_alarm_last_route_id', window.currentRouteId); let startIndex = window.stops.length - csvAddedCount; if (startIndex < 0) startIndex = 0;
-
+                
                 if (configData && Array.isArray(configData)) {
                     for (let i = 0; i < configData.length; i++) {
                         const item = configData[i]; const videoName = item.file; const exitVideoName = item.exitFile; let zipFile = null; let exitZipFile = null;
@@ -614,11 +613,11 @@
                         if (exitZipFile) { const buffer = await exitZipFile.async("arraybuffer"); const mime = getMimeType(exitVideoName); const fileObj = new File([new Blob([buffer], {type: mime})], exitVideoName, { type: mime }); newStop.exitFile = fileObj; await saveVideoToDB(window.currentRouteId, window.currentDirection, dbIndex, fileObj, 'exit'); }
                     }
                 }
-
+                
                 const pidsZipMap = { '罐頭.zip': 'common', 'common.zip': 'common', '中文.zip': 'zh', 'zh.zip': 'zh', '英文.zip': 'en', 'en.zip': 'en', '台語.zip': 'tw', 'tw.zip': 'tw', '客語.zip': 'hk', 'hk.zip': 'hk', '粵語.zip': 'yue', 'yue.zip': 'yue' };
                 const folderMap = { '罐頭/': 'common', 'common/': 'common', '中文/': 'zh', 'zh/': 'zh', '英文/': 'en', 'en/': 'en', '台語/': 'tw', 'tw/': 'tw', '客語/': 'hk', 'hk/': 'hk', '粵語/': 'yue', 'yue/': 'yue' };
                 let loadedAudioCounts = { common: 0, zh: 0, en: 0, tw: 0, hk: 0, yue: 0 };
-
+                
                 for (const fullPath of Object.keys(zip.files)) {
                     if (fullPath.includes('__MACOSX') || fullPath.includes('.DS_Store')) continue;
                     const entry = zip.files[fullPath]; const fileName = fullPath.split('/').pop();
@@ -703,10 +702,10 @@
                 saveCurrentToProject(); window.currentDirection = pendingSwitchDir; const data = window.projectData[pendingSwitchDir];
                 window.stops = data.stops || []; window.routeName = data.routeName || "---"; window.destZH = data.destZH || "---"; window.destEN = data.destEN || "---"; window.stopCounter = data.stopCounter || 0;
                 resetStopsState(); document.getElementById('tab-outbound').classList.toggle('active', pendingSwitchDir === 'outbound'); document.getElementById('tab-inbound').classList.toggle('active', pendingSwitchDir === 'inbound'); updateTabLabels(); renderAllStops();
-
+                
                 let firstIdx = window.stops.findIndex(s => s.enabled && !s.mergedSkipped); let secondIdx = -1; if (firstIdx !== -1) { for (let i = firstIdx + 1; i < window.stops.length; i++) { if (window.stops[i].enabled && !window.stops[i].mergedSkipped) { secondIdx = i; break; } } }
                 let shouldSkipFirst = false; if (firstIdx !== -1 && secondIdx !== -1 && window.stops[firstIdx].nameZH === lastStationName && lastStationName !== "") { shouldSkipFirst = true; }
-
+                
                 if (shouldSkipFirst) { 
                     window.stops[firstIdx].triggered = true; window.stops[firstIdx].enterTriggered = true; window.stops[firstIdx].exitTriggered = true; window.stops[firstIdx].coreEntered = true; window.stops[firstIdx].bgEnterTriggered = true; window.stops[firstIdx].bgExitTriggered = true; currentMaxIndex = firstIdx; 
                     window._requireStrictStartIdx = secondIdx;
@@ -792,30 +791,30 @@
 
                 if (!rNameInput) { alert("請填寫完整資訊！"); return; }
                 if (window.stops.length > 0 && !confirm("⚠️ 警告：這將會清空目前畫面上所有站點（去回程），確定繼續？")) return;
-
+                
                 loadingOverlay.style.display = 'flex'; loadingText.innerText = "請求 Token...";
                 const token = await getValidToken();
                 if (!token) { loadingOverlay.style.display = 'none'; alert("❌ 授權失敗或連線逾時！"); return; }
-
+                
                 loadingText.innerText = `下載 ${rNameInput} 路線資料...`;
                 const apiUrl = city === 'InterCity' ? `https://tdx.transportdata.tw/api/basic/v2/Bus/StopOfRoute/InterCity/${parentRoute}?%24format=JSON` : `https://tdx.transportdata.tw/api/basic/v2/Bus/StopOfRoute/City/${city}/${parentRoute}?%24format=JSON`;
-
+                
                 const response = await fetch(apiUrl, { headers: { 'Authorization': `Bearer ${token}` } }); 
                 const tdxData = await response.json();
                 if (!tdxData || tdxData.length === 0) { alert(`找不到路線資料。\n請確認名稱是否完全吻合或選擇正確縣市。`); loadingOverlay.style.display = 'none'; return; }
-
+                
                 let targetData = tdxData.filter(routeObj => routeObj.SubRouteName && routeObj.SubRouteName.Zh_tw === rNameInput);
                 if (targetData.length === 0) targetData = tdxData;
 
                 let extractedRouteName = window.extractPidsRouteName(rNameInput);
                 let newProj = { outbound: { stops: [], routeName: extractedRouteName, destZH: "---", destEN: "---", stopCounter: 0 }, inbound: { stops: [], routeName: extractedRouteName, destZH: "---", destEN: "---", stopCounter: 0 } };
                 let foundOut = false; let foundIn = false;
-
+                
                 targetData.forEach(routeObj => {
                     const isOutbound = routeObj.Direction === 0; const dirKey = isOutbound ? 'outbound' : 'inbound';
                     if (isOutbound && foundOut) return; if (!isOutbound && foundIn) return;
                     if (isOutbound) foundOut = true; if (!isOutbound) foundIn = true;
-
+                    
                     let c = 0; routeObj.Stops.forEach(st => { 
                         c++; 
                         newProj[dirKey].stops.push(makeStop(c, st.StopName.Zh_tw||"", st.StopName.En||"", st.StopPosition.PositionLat.toString(), st.StopPosition.PositionLon.toString())); 
@@ -823,7 +822,7 @@
                     newProj[dirKey].stopCounter = c;
                     if (c > 0) { newProj[dirKey].destZH = newProj[dirKey].stops[c - 1].nameZH; newProj[dirKey].destEN = newProj[dirKey].stops[c - 1].nameEN; }
                 });
-
+                
                 const cpThreshold = parseFloat(document.getElementById('auto-cp-dist').value) || 300;
                 ['outbound', 'inbound'].forEach(dir => {
                     let dirStops = newProj[dir].stops; let lastValid = null;
@@ -853,11 +852,11 @@
                 const existingIndex = routes.findIndex(r => r.name === projName);
                 let targetRouteId = existingIndex !== -1 ? routes[existingIndex].id : Date.now().toString();
                 if (existingIndex !== -1) routes.splice(existingIndex, 1);
-
+                
                 const serialize = (sArray) => sArray.map(s => ({ nameZH: s.nameZH, nameEN: s.nameEN, lat: s.lat, lon: s.lon, rad: s.rad, time: s.time, enabled: s.enabled, muted: s.muted, isCheckpoint: s.isCheckpoint, isWaypoint: s.isWaypoint, file: "", exitFile: "" }));
                 const newRouteData = { id: targetRouteId, name: projName, timestamp: new Date().toLocaleString(), outbound: { ...window.projectData.outbound, stops: serialize(window.projectData.outbound.stops) }, inbound: { ...window.projectData.inbound, stops: serialize(window.projectData.inbound.stops) } };
                 routes.push(newRouteData); window.saveRoutesMetadata(routes); window.currentRouteId = targetRouteId; localStorage.setItem('gps_alarm_last_route_id', targetRouteId);
-
+                
                 window._requireStrictStartIdx = -1; window._hasPhysicallyEnteredReturnTrip = false;
                 loadFromProject('outbound'); closeTdxModal(); 
                 alert(`✅ TDX 匯入成功！已自動建檔儲存。\n\n📂 專案: ${projName}\n🚌 路線: ${extractedRouteName}\n🔵 去程: ${window.projectData.outbound.stops.length} 站\n⚪ 返程: ${window.projectData.inbound.stops.length} 站`);
@@ -967,7 +966,7 @@
                 if (stop.file) updateFileUI(stop.id, stop.file, 'enter'); if (stop.exitFile) updateFileUI(stop.id, stop.exitFile, 'exit'); 
             }); 
         }
-
+        
         window.moveStop = async function(index, direction) { const targetIndex = index + direction; if (targetIndex < 0 || targetIndex >= window.stops.length) return; [window.stops[index], window.stops[targetIndex]] = [window.stops[targetIndex], window.stops[index]]; for (let i = 0; i < window.stops.length; i++) { if (window.stops[i].file) await saveVideoToDB(window.currentRouteId, window.currentDirection, i, window.stops[i].file, 'enter'); if (window.stops[i].exitFile) await saveVideoToDB(window.currentRouteId, window.currentDirection, i, window.stops[i].exitFile, 'exit'); } renderAllStops(); }
         window.jumpStop = async function(currentIndex) { const targetStr = prompt(`將第 ${currentIndex + 1} 站移動到第幾站之前？(1-${window.stops.length})`); if (!targetStr) return; const targetNum = parseInt(targetStr); if (isNaN(targetNum) || targetNum < 1 || targetNum > window.stops.length || targetNum === currentIndex + 1) return; const targetIndex = targetNum - 1; const stopToMove = window.stops[currentIndex]; window.stops.splice(currentIndex, 1); window.stops.splice(targetIndex, 0, stopToMove); loadingOverlay.style.display = 'flex'; loadingText.innerText = "重整資料庫順序..."; for (let i = 0; i < window.stops.length; i++) { if (window.stops[i].file) await saveVideoToDB(window.currentRouteId, window.currentDirection, i, window.stops[i].file, 'enter'); if (window.stops[i].exitFile) await saveVideoToDB(window.currentRouteId, window.currentDirection, i, window.stops[i].exitFile, 'exit'); } loadingOverlay.style.display = 'none'; renderAllStops(); };
         window.toggleWaypoint = function(id) { const stop = window.stops.find(s => s.id === id); if (stop) { stop.isWaypoint = !stop.isWaypoint; renderAllStops(); } };
@@ -998,7 +997,7 @@
 
         window.getSavedRoutes = function() { const data = localStorage.getItem('gps_alarm_routes_v32'); let routes = data ? JSON.parse(data) : []; routes = routes.map(r => { if (!r.outbound) { return { id: r.id, name: r.name, timestamp: r.timestamp, outbound: { stops: r.stops || [], routeName: r.routeName||"---", destZH: r.destZH||"---", destEN: r.destEN||"---", stopCounter: (r.stops||[]).length }, inbound: { stops: [], routeName: "---", destZH: "---", destEN: "---", stopCounter: 0 } }; } return r; }); return routes; }
         window.saveRoutesMetadata = function(routes) { localStorage.setItem('gps_alarm_routes_v32', JSON.stringify(routes)); if(window.pushStateToFirebase) window.pushStateToFirebase(); }
-
+        
         window.openSaveModal = function() {
             saveCurrentToProject();
             if (window.projectData.outbound.stops.length === 0 && window.projectData.inbound.stops.length === 0) { alert("無站點資料！"); return; }
@@ -1025,7 +1024,7 @@
             if (routeId === "temp") { const lastId = localStorage.getItem('gps_alarm_last_route_id'); if (lastId) route = routes.find(r => r.id === lastId); } else { route = routes.find(r => r.id === routeId.toString()); }
             if (!route && !isSilent) { alert("找不到路線資料"); return; } if (!route && isSilent) { window.addStop(); return; } 
             if (!isSilent && !confirm(`確定載入專案「${route.name}」？`)) return;
-
+            
             if(!isSilent) { loadingOverlay.style.display = 'flex'; loadingText.innerText = "載入中..."; }
             window.currentRouteId = route.id; localStorage.setItem('gps_alarm_last_route_id', window.currentRouteId); 
             const restore = async (sArray, dir) => { let res = []; for(let i=0; i<sArray.length; i++) { const sData = sArray[i]; const file = await getVideoFromDB(window.currentRouteId, dir, i, 'enter'); const exitFile = await getVideoFromDB(window.currentRouteId, dir, i, 'exit'); res.push({ ...sData, file: file, exitFile: exitFile, triggered: false, enterTriggered: false, exitTriggered: false, coreEntered: false, anchorInvalidated: false, waitingForHeadingToCorrect: false, prevDistCur: undefined, prevDistNext: undefined, bothAwayTriggered: false, bgEnterTriggered: false, bgExitTriggered: false, bgCoreEntered: false, bgAnchorInvalidated: false, bgWaitingForHeadingToCorrect: false, bgBothAwayTriggered: false, dynamicInnerEntered: false, bgDynamicInnerEntered: false, mergedSkipped: false, entryLat: null, entryLon: null, enterTime: 0, isZhinanFirst: false, isZhinanSecond: false, id: i+1 }); } return res; };
@@ -1039,10 +1038,10 @@
         window.closeRouteList = function() { routeModal.style.display = 'none'; };
         window.exportRoutesFile = function() { const routes = window.getSavedRoutes(); if (routes.length===0) return; const blob = new Blob([JSON.stringify(routes, null, 2)], {type: "application/json"}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `Backup.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); };
         window.importRoutesFile = function(input) { const file = input.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const importedRoutes = JSON.parse(e.target.result); if (confirm("匯入？")) window.saveRoutesMetadata(importedRoutes); alert("✅ 已載入！"); openRouteList(); } catch (err) { alert("❌ 格式錯誤"); } input.value = ''; }; reader.readAsText(file); };
-
+        
         function initMap() { if (map !== null) return; map = L.map('map').setView([25.0478, 121.5170], 13); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map); map.on('click', function(e) { placeMarker(e.latlng.lat, e.latlng.lng); }); }
         function placeMarker(lat, lng) { if (currentMarker) map.removeLayer(currentMarker); if (currentCircle) map.removeLayer(currentCircle); currentMarker = L.marker([lat, lng]).addTo(map); currentCircle = L.circle([lat, lng], { color: '#3388ff', fillColor: '#3388ff', fillOpacity: 0.2, radius: currentEditingRadius }).addTo(map); currentMarker.bindPopup(`警報範圍`).openPopup(); }
-
+        
         window.openMapPicker = function(id) { 
             editingStopId = id; mapModal.style.display = 'flex'; 
             const radVal = document.getElementById(`rad-${id}`).value; currentEditingRadius = radVal ? parseFloat(radVal) : 150; radiusDisplay.innerText = currentEditingRadius; 
@@ -1055,7 +1054,7 @@
                 }, 50);
             }, 300); 
         };
-
+        
         window.closeMap = function() { mapModal.style.display = 'none'; };
         window.confirmMapLocation = function() { if (!currentMarker) return; document.getElementById(`lat-${editingStopId}`).value = currentMarker.getLatLng().lat.toFixed(6); document.getElementById(`lon-${editingStopId}`).value = currentMarker.getLatLng().lng.toFixed(6); window.updateStopData(editingStopId); closeMap(); };
 
@@ -1094,7 +1093,7 @@
 
         function updatePidsClock() { const now = new Date(); const hh = String(now.getHours()).padStart(2, '0'); const mm = String(now.getMinutes()).padStart(2, '0'); const clockEl = document.getElementById('pids-clock'); if(clockEl) clockEl.innerText = `現在時間：${hh}:${mm}`; }
         window.forceFullscreen = function() { try { const elem = document.documentElement; if (elem.requestFullscreen) { let p = elem.requestFullscreen(); if(p) p.catch(e => console.log("Fullscreen ignored", e)); } else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); } } catch(e) {} };
-
+        
         function startWatcher() {
             if(watchId) navigator.geolocation.clearWatch(watchId);
             if(!window._useRemoteGps) {
@@ -1144,7 +1143,7 @@
             if (currentIndex === 0) return true;
             let prevIndex = -1; for (let i = currentIndex - 1; i >= 0; i--) { if (window.stops[i].enabled && !window.stops[i].mergedSkipped) { prevIndex = i; break; } }
             if (prevIndex === -1) return true; const prevStop = window.stops[prevIndex];
-
+            
             if (currentStop.isCheckpoint) {
                 let timeSinceLastActivity = Date.now() - lastStationActivityTime; 
                 let isTimeout = lastStationActivityTime > 0 && timeSinceLastActivity > 600000; 
@@ -1181,7 +1180,7 @@
 
         window.onLocationUpdate = function(pos) { 
             hasFirstFix = true; const lat = pos.coords.latitude; const lon = pos.coords.longitude; lastUpdateTimestamp = Date.now(); const d = new Date(); elLastTime.innerText = d.getHours() + ":" + d.getMinutes().toString().padStart(2,'0') + ":" + d.getSeconds().toString().padStart(2,'0'); 
-
+            
             if (window._lastValidLat !== null && window._lastValidLon !== null) {
                 let dDist = getDist(window._lastValidLat, window._lastValidLon, lat, lon);
                 if (dDist > 4) { window._currentHeading = getBearing(window._lastValidLat, window._lastValidLon, lat, lon); window._lastValidLat = lat; window._lastValidLon = lon; }
@@ -1220,13 +1219,13 @@
             const latVal = stop.lat; const lonVal = stop.lon; if (!latVal || !lonVal) return; 
             let radius = parseFloat(stop.rad); if (stop.isZhinanSecond) radius = 60;
             let distText = ""; let dist = getDist(curLat, curLon, parseFloat(latVal), parseFloat(lonVal)); 
-
+            
             let canEarlyAnchorMain = (!window.isSeqMode || (!hasTriggeredAnyGlobal && window._requireStrictStartIdx === -1) || index === expectedNextIdx || index <= currentMaxIndex);
             if (canEarlyAnchorMain && stop.entryLat === null && dist <= radius) { stop.entryLat = curLat; stop.entryLon = curLon; stop.enterTime = Date.now(); }
 
             let nextIdx = -1;
             for (let j = index + 1; j < window.stops.length; j++) { if (window.stops[j].enabled && !window.stops[j].mergedSkipped) { nextIdx = j; break; } }
-
+            
             let expectedHeading = null;
             if (nextIdx !== -1 && stop.lat && stop.lon && window.stops[nextIdx].lat && window.stops[nextIdx].lon) {
                 expectedHeading = getBearing(parseFloat(stop.lat), parseFloat(stop.lon), parseFloat(window.stops[nextIdx].lat), parseFloat(window.stops[nextIdx].lon));
@@ -1250,7 +1249,7 @@
 
             const distEl = document.getElementById('dist-' + stop.id);
             if (isNaN(dist)) { distEl.innerText = "Err"; } else { distEl.innerText = distText; distEl.style.color = (dist < 1000) ? "#d63031" : "#666"; if(dist < 1000) distEl.classList.add('near'); } 
-
+            
             const coreRadius = parseFloat(document.getElementById('core-radius').value) || 60;
             const bufferVal = parseFloat(document.getElementById('exit-buffer').value) || 0; 
             const dynamicExitRad = radius + bufferVal; 
@@ -1346,16 +1345,16 @@
             // 主引擎
             if (!stop.enterTriggered && dist <= radius) {
                 if (window.isSeqMode) { if (!checkSequential(index, stop, curLat, curLon)) return; }
-
+                
                 if (index === window._requireStrictStartIdx) { window._hasPhysicallyEnteredReturnTrip = true; }
 
                 stop.enterTriggered = true; stop.triggered = true; 
                 if (stop.entryLat === null) { stop.entryLat = curLat; stop.entryLon = curLon; stop.enterTime = Date.now(); }
                 if (index > currentMaxIndex) currentMaxIndex = index; lastStationActivityTime = Date.now();
                 if (dist <= coreRadius) { stop.coreEntered = true; }
-
+                
                 window.stops.forEach(otherStop => { if (otherStop.id !== stop.id && otherStop.enterTriggered && !otherStop.exitTriggered) { otherStop.exitTriggered = true; lastGlobalExitTime = Date.now(); } });
-
+                
                 if (stop.isWaypoint) { 
                     stop.exitTriggered = true; lastGlobalExitTime = Date.now(); lastStationActivityTime = Date.now(); document.getElementById(`card-${stop.id}`).classList.add('active'); setTimeout(() => { const el = document.getElementById(`card-${stop.id}`); if(el) el.classList.remove('active'); }, 2000); 
                     saveCurrentToProject(); 
@@ -1379,7 +1378,7 @@
 
                 const userCoolDown = parseFloat(document.getElementById('cool-down').value) || 5; 
                 if (Date.now() - stop.enterTime < (userCoolDown * 1000)) return;
-
+                
                 const distFromAnchor = getDist(curLat, curLon, stop.entryLat, stop.entryLon);
                 let isLeaving = false;
 
@@ -1404,12 +1403,12 @@
                     } else if (stop.anchorInvalidated) {
                         if (isCoreExiting) {
                             let distBetweenStops = (nextIdx !== -1 && window.stops[nextIdx].lat && window.stops[nextIdx].lon) ? getDist(parseFloat(latVal), parseFloat(lonVal), parseFloat(window.stops[nextIdx].lat), parseFloat(window.stops[nextIdx].lon)) : Infinity;
-
+                            
                             if (stop.prevDistCur !== undefined && stop.prevDistNext !== undefined) {
                                 let dCurDelta = dist - stop.prevDistCur; let dNextDelta = distNext - stop.prevDistNext;
-
+                                
                                 if (distNext !== Infinity && dCurDelta > deltaBuffer && dNextDelta > deltaBuffer) { stop.bothAwayTriggered = true; }
-
+                                
                                 if (expectedHeading !== null && headingDiff > 110) { stop.waitingForHeadingToCorrect = true; } 
                                 else {
                                     if (stop.waitingForHeadingToCorrect) {
@@ -1432,9 +1431,9 @@
                         if (dist > leaveThreshold) { isLeaving = true; }
                     } else if (dist > dynamicExitRad) { isLeaving = true; }
                 }
-
+                
                 stop.prevDistCur = dist; stop.prevDistNext = distNext;
-
+                
                 if (isLeaving) {
                     stop.exitTriggered = true; lastGlobalExitTime = Date.now(); lastStationActivityTime = Date.now();
                     if (window.isTrackingVideo) { if (stop.exitFile) { playVideo(stop.id, stop.exitFile, stop.muted); document.getElementById(`card-${stop.id}`).classList.remove('active'); document.getElementById(`card-${stop.id}`).classList.add('active-exit'); } else { if (!isStickyLoop && !window.isSeqMode) { if(currentPlayingId === stop.id) { closeVideo(); document.getElementById(`card-${stop.id}`).classList.remove('active'); } } } }
@@ -1462,7 +1461,7 @@
         function playVideo(id, file, startMuted) { isStickyLoop = false; currentPlayingId = id; videoOverlay.style.display = "flex"; errorMsg.style.display = "none"; const url = URL.createObjectURL(file); video.src = url; attemptFullscreen(); video.muted = startMuted ? true : false; video.volume = window._globalVolume; video.onended = function() { video.muted = true; video.play(); }; video.onerror = function() { errorMsg.style.display = "block"; }; var playPromise = video.play(); if (playPromise !== undefined) { playPromise.catch(error => { video.muted = true; video.play(); }); } }
         window.closeVideo = function() { exitFullscreen(); video.pause(); video.onended = null; videoOverlay.style.display = "none"; video.src = ""; currentPlayingId = null; };
         function attemptFullscreen() { try{const elem = document.documentElement; if (elem.requestFullscreen) { elem.requestFullscreen().catch(err => {}); } else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }}catch(e){} }
-
+        
         window._activeAudio = null; window._activeAudioCleanup = null; window._activeTTSCleanup = null; window._activeDelayCleanup = null;
         async function processPidsQueue(announceId) {
             if (window.pidsIsPlaying) return; window.pidsIsPlaying = true;
@@ -1521,7 +1520,7 @@
         function triggerPidsAnnouncement(stationIdx, mode) {
             try {
                 const s = window.stops[stationIdx]; if (!s) return;
-
+                
                 const bMode = document.getElementById('pids-broadcast-mode') ? document.getElementById('pids-broadcast-mode').value : 'both';
                 if (bMode === 'next_only' && mode === 'arr') return;
                 if (bMode === 'arr_only' && mode === 'next') return;
@@ -1541,7 +1540,7 @@
                 const formatEl = document.getElementById('pids-arr-format'); const format = formatEl ? formatEl.value : 'auto';
                 const l1 = document.getElementById('pids-l1') ? document.getElementById('pids-l1').value : 'zh'; const l2 = document.getElementById('pids-l2') ? document.getElementById('pids-l2').value : 'en'; const l3 = document.getElementById('pids-l3') ? document.getElementById('pids-l3').value : 'tw'; const l4 = document.getElementById('pids-l4') ? document.getElementById('pids-l4').value : 'hk'; const l5 = document.getElementById('pids-l5') ? document.getElementById('pids-l5').value : 'none';
                 const finalOrder = [...new Set([l1, l2, l3, l4, l5])].filter(l => l !== 'none');
-
+                
                 let lastIdx = -1; for (let i = window.stops.length - 1; i >= 0; i--) { if (window.stops[i].enabled && !window.stops[i].mergedSkipped) { lastIdx = i; break; } }
                 const isTerm = (stationIdx === lastIdx);
                 // ✨ 智慧靜音分流器 (Smart Handoff) ✨
@@ -1574,7 +1573,7 @@
                 } else if (mode === 'arr') {
                     let useSuffix = false;
                     if (format === 'auto') { useSuffix = !!findPidsAudio('common', '到了'); if (!useSuffix) { useSuffix = finalOrder.some(l => getPrefixSuffix(l, '到了')); } } else if (format === 'suffix') { useSuffix = true; }
-
+                    
                     finalOrder.forEach((lang, index) => {
                         if (isTerm && hasTermArr) {
                             pushQA(lang, '終點站到了', index); addLangToQueue(lang);
