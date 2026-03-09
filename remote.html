@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>📱 旗艦版司機遙控器 (V175 廣播中控台)</title>
+<title>📱 旗艦版司機遙控器 (完美播音版)</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
     body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; text-align: center; padding: 15px; background: #2c3e50; color: white; margin: 0; display: flex; flex-direction: column; box-sizing: border-box; min-height: 100vh; }
@@ -44,6 +44,7 @@
     .lang-select { padding: 6px; border-radius: 4px; border: 1px solid #ccc; width: 30%; margin-bottom: 5px; }
     .audio-setting-section { background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #eee; }
     #loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 40000; justify-content: center; align-items: center; flex-direction: column; color:#333; font-weight:bold; font-size:18px;}
+    #toast { visibility:hidden; position:fixed; bottom:50px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); color:white; padding:10px 20px; border-radius:20px; z-index:99999; font-size:14px; font-weight:bold;}
 </style>
 </head>
 <body>
@@ -145,7 +146,7 @@
     </div>
 
     <div id="loading-overlay">處理中，請稍候...</div>
-    <div id="toast" style="visibility:hidden; position:fixed; bottom:50px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); color:white; padding:10px 20px; border-radius:20px; z-index:99999;"></div>
+    <div id="toast"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -187,15 +188,17 @@
                 document.getElementById('control-panel').classList.add("active");
                 document.getElementById('status-panel').style.display = "block";
                 
-                // 🔓 終極解鎖手機語音權限
+                // 🔓 強制解鎖手機瀏覽器聲音限制 (必須在點擊事件內觸發)
                 if (window.speechSynthesis) { let unlockTTS = new SpeechSynthesisUtterance(''); unlockTTS.volume = 0; window.speechSynthesis.speak(unlockTTS); }
                 try { const unlockAudio = new Audio("data:audio/mp3;base64,//M0QAAAAHPTT3IAQAAKAAQAAH4EAAABACAAAIAiAAgH/4//wMAAAB/8AAA/wD///3/8/8D/////wAAADQAAP//gQAA"); unlockAudio.play().then(() => { unlockAudio.pause(); }).catch(e => {}); } catch(err) {}
 
                 listenToHostState();
                 listenToAudioTrigger();
                 
-                // 💓 啟動雲端心跳發射器 (每3秒回報一次存活)
-                heartbeatInterval = setInterval(() => { set(ref(db, 'buses/' + currentBusId + '/remote_status'), { alive: true, timestamp: Date.now() }); }, 3000);
+                // 💓 啟動雲端心跳，告訴主機「手機活著，交出麥克風」
+                heartbeatInterval = setInterval(() => { 
+                    set(ref(db, 'buses/' + currentBusId + '/remote_status'), { alive: true, timestamp: Date.now() }); 
+                }, 3000);
             } else {
                 input.disabled = false; isConnected = false; btn.innerText = "連線主機"; btn.classList.remove("connected");
                 document.getElementById('control-panel').classList.remove("active"); document.getElementById('status-panel').style.display = "none";
@@ -274,7 +277,12 @@
             set(ref(db, 'buses/' + currentBusId + '/command'), { action: 'SET_VOLUME', payload: window._globalVolume, timestamp: Date.now() });
         };
 
-        function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.style.visibility = 'visible'; setTimeout(() => t.style.visibility = 'hidden', 3000); }
+        function showToast(msg) { 
+            const t = document.getElementById('toast'); 
+            t.innerText = msg; 
+            t.style.visibility = 'visible'; 
+            setTimeout(() => { t.style.visibility = 'hidden'; }, 3000); 
+        }
 
         // ==========================================
         // 🎙️ 手機語音金庫與播報大腦
@@ -306,7 +314,7 @@
                 
                 const fileData = await fileRes.json(); loadingOverlay.innerText = "正在高速下載 audio.zip...";
                 
-                // ✨ 主機端的黃金魔法指令：指定接收 Raw 格式
+                // ✨ 指定接收 Raw 格式，避開限制
                 const zipRes = await fetch(fileData.url, { 
                     headers: { 'Authorization': `token ${tokenInput}`, 'Accept': 'application/vnd.github.v3.raw' } 
                 });
@@ -338,34 +346,43 @@
             }
         };
 
-        // --- 接收主機廣播訊號 (已裝上「首波防干擾隔離法」) ---
+        // --- 接收主機廣播訊號 (完美首波防干擾版) ---
         let lastAudioId = null;
-        let isInitialAudioLoad = true;
+        let isFirstEvent = true;
 
         function listenToAudioTrigger() {
-            isInitialAudioLoad = true;
+            isFirstEvent = true;
             unsubscribeAudio = onValue(ref(db, 'buses/' + currentBusId + '/audio_trigger'), (snap) => {
                 const data = snap.val();
-                if (!data) return;
 
-                // 🚀 第一關：如果是剛連線讀取到的歷史資料，直接記住它然後丟掉！
-                if (isInitialAudioLoad) {
-                    isInitialAudioLoad = false;
-                    lastAudioId = data.id; 
-                    console.log("🗑️ 已自動隔離歷史舊訊號");
+                // 第一關：連線瞬間的資料直接丟棄，不播報
+                if (isFirstEvent) {
+                    isFirstEvent = false;
+                    if (data) lastAudioId = data.id; 
+                    console.log("🗑️ 系統已就緒，隔離舊訊號");
                     return; 
                 }
 
-                // 🚀 第二關：連線後真正收到的「新」訊號，才觸發播報
-                if (data.id !== lastAudioId) {
+                // 第二關：保證是全新訊號才觸發
+                if (data && data.id !== lastAudioId) {
                     lastAudioId = data.id;
-                    showToast(`📡 收到新廣播：${data.zh}`); // 黑框提示，確定有收到
+                    showToast(`📡 收到新廣播：${data.zh}`); // 顯示雷達
                     triggerRemoteAnnouncement(data);
                 }
             });
         }
 
-        function findPidsAudio(category, baseName) { if (!window.pidsAssets[category]) return null; const keys = Object.keys(window.pidsAssets[category]); for (let i = 0; i < keys.length; i++) { if (keys[i].replace(/\.[^/.]+$/, "").trim() === baseName.trim()) { return window.pidsAssets[category][keys[i]]; } } return null; }
+        // --- 核心播放邏輯 ---
+        function findPidsAudio(category, baseName) { 
+            if (!window.pidsAssets[category]) return null; 
+            const keys = Object.keys(window.pidsAssets[category]); 
+            for (let i = 0; i < keys.length; i++) { 
+                if (keys[i].replace(/\.[^/.]+$/, "").trim() === baseName.trim()) { 
+                    return window.pidsAssets[category][keys[i]]; 
+                } 
+            } 
+            return null; 
+        }
         
         function getPrefixSuffix(lang, type) { 
             let url = findPidsAudio(lang, type); if (url) return { type: 'audio', src: url }; 
@@ -393,24 +410,25 @@
             }
         }
         
-        // 核心引擎：解析主機來的 data 並丟入 Queue
         function triggerRemoteAnnouncement(data) {
             pidsAnnounceId++; const myId = pidsAnnounceId;
+            
+            // 停止當前聲音
             if (window._activeAudio) { try{window._activeAudio.pause();}catch(e){} window._activeAudio=null; }
             if (window._activeAudioCleanup) window._activeAudioCleanup(); 
             if (window.speechSynthesis) window.speechSynthesis.cancel();
             
             pidsPlayQueue = []; window.pidsIsPlaying = false;
             
-            // 取得播報模式 (只宣告一次)
+            // 取得播報模式
             const playMode = document.getElementById('pids-play-mode').value;
             
-            // 模式攔截
+            // 模式攔截判斷
             if (playMode === 'next_only' && data.mode === 'arr') return;
             if (playMode === 'arr_only' && data.mode === 'next') return;
             if (playMode === 'smart' && data.mode === 'arr') {
-                if (data.dist && data.dist < 300) {
-                    console.log("💡 智慧攔截：站距太近，略過抵達廣播");
+                if (data.dist !== undefined && data.dist !== null && data.dist < 300) {
+                    console.log("💡 智慧模式攔截：站距過近");
                     return; 
                 }
             }
@@ -459,13 +477,13 @@
                 });
             }
             
-            // 啟動播放引擎
             processPidsQueue(myId);
         }
 
-        // 播放引擎 (支援完美停頓間隔)
+        // --- 播放引擎 (支援語音間隔) ---
         async function processPidsQueue(announceId) {
-            if (window.pidsIsPlaying) return; window.pidsIsPlaying = true;
+            if (window.pidsIsPlaying) return; 
+            window.pidsIsPlaying = true;
             
             while (pidsPlayQueue.length > 0) {
                 if (announceId !== pidsAnnounceId) break; 
@@ -474,17 +492,24 @@
                 if (item.type === 'audio') {
                     await new Promise((resolve) => {
                         let isDone = false; let timeoutId; 
-                        const audio = new Audio(item.src); audio.volume = window._globalVolume; window._activeAudio = audio;
+                        const audio = new Audio(item.src); 
+                        audio.volume = window._globalVolume; 
+                        window._activeAudio = audio;
                         
                         const cleanup = () => { 
-                            if(isDone) return; isDone = true; 
-                            clearTimeout(timeoutId); audio.onended = null; audio.onerror = null; 
+                            if(isDone) return; 
+                            isDone = true; 
+                            clearTimeout(timeoutId); 
+                            audio.onended = null; audio.onerror = null; 
                             if(window._activeAudio === audio) window._activeAudio = null; 
                             if(window._activeAudioCleanup === cleanup) window._activeAudioCleanup = null; 
                             resolve(); 
                         };
                         
-                        window._activeAudioCleanup = cleanup; audio.onended = cleanup; audio.onerror = cleanup; timeoutId = setTimeout(cleanup, 10000);
+                        window._activeAudioCleanup = cleanup; 
+                        audio.onended = cleanup; 
+                        audio.onerror = cleanup; 
+                        timeoutId = setTimeout(cleanup, 10000);
                         audio.addEventListener('loadedmetadata', () => { 
                             if(!isDone){ clearTimeout(timeoutId); timeoutId = setTimeout(cleanup, (audio.duration * 1000) + 3000); } 
                         });
@@ -494,17 +519,21 @@
                     await new Promise((resolve) => {
                         if (!window.speechSynthesis) { resolve(); return; } 
                         let timeoutId; try {
-                            window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(item.text); let isDone = false; 
+                            window.speechSynthesis.cancel(); 
+                            const u = new SpeechSynthesisUtterance(item.text); 
+                            let isDone = false; 
                             const cleanup = () => { if(isDone) return; isDone = true; clearTimeout(timeoutId); u.onend=null; u.onerror=null; resolve(); };
                             u.lang = item.lang || 'zh-TW'; u.rate = 0.9; u.volume = window._globalVolume; u.onend = cleanup; u.onerror = cleanup;
-                            timeoutId = setTimeout(cleanup, 8000); window.speechSynthesis.speak(u);
+                            timeoutId = setTimeout(cleanup, 8000); 
+                            window.speechSynthesis.speak(u);
                         } catch(e) { resolve(); }
                     });
                 }
 
-                // ✨ 完美停頓間隔
+                // 停頓間隔
+                if (announceId !== pidsAnnounceId) break;
                 const gapMs = parseInt(document.getElementById('pids-audio-gap').value) || 0;
-                if (pidsPlayQueue.length > 0 && gapMs > 0 && announceId === pidsAnnounceId) {
+                if (pidsPlayQueue.length > 0 && gapMs > 0) {
                     await new Promise(r => setTimeout(r, gapMs));
                 }
             }
