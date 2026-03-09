@@ -119,16 +119,18 @@
             <div class="audio-setting-section">
                 <h4 style="margin-top:0;">3. 播報觸發模式</h4>
                 <select id="pids-play-mode" style="width:100%; margin-bottom:10px;">
-                    <option value="all" selected>智慧模式 (兩個都播)</option>
+                    <option value="smart" selected>💡 智慧模式 (站距 < 300m 不播即將抵達)</option>
+                    <option value="all">傳統模式 (強制兩個都播)</option>
                     <option value="next_only">只播「下一站」</option>
                     <option value="arr_only">只播「即將抵達」</option>
                 </select>
+                
                 <h4 style="margin-top:0;">4. 語音停頓間隔</h4>
                 <select id="pids-audio-gap" style="width:100%;">
                     <option value="0">無間隔 (緊湊)</option>
+                    <option value="200" selected>極短停頓 (0.2秒)</option>
                     <option value="400">短停頓 (0.4秒)</option>
-                    <option value="800" selected>標準停頓 (0.8秒)</option>
-                    <option value="1200">長停頓 (1.2秒)</option>
+                    <option value="800">標準停頓 (0.8秒)</option>
                 </select>
             </div>
             
@@ -368,7 +370,18 @@
             pidsAnnounceId++; const myId = pidsAnnounceId;
             if (window._activeAudio) { try{window._activeAudio.pause();}catch(e){} window._activeAudio=null; }
             if (window._activeAudioCleanup) window._activeAudioCleanup(); if (window.speechSynthesis) window.speechSynthesis.cancel();
-            pidsPlayQueue = []; window.pidsIsPlaying = false; 
+            pidsPlayQueue = []; window.pidsIsPlaying = false;
+            // ✨ 播報模式與 300m 智慧攔截器
+            const playMode = document.getElementById('pids-play-mode').value;
+            if (playMode === 'next_only' && data.mode === 'arr') return;
+            if (playMode === 'arr_only' && data.mode === 'next') return;
+            if (playMode === 'smart' && data.mode === 'arr') {
+                // 如果是智慧模式，且主機傳來的站距小於 300 公尺，就霸氣攔截！
+                if (data.dist && data.dist < 300) {
+                    console.log("💡 智慧模式啟動：距離小於300m，略過即將抵達");
+                    return; 
+                }
+            }
             // ✨ 播報模式攔截器
             const playMode = document.getElementById('pids-play-mode').value;
             if (playMode === 'next_only' && data.mode === 'arr') return;
