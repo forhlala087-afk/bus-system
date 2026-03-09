@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>📱 旗艦版司機遙控器 (完美播音版)</title>
+<title>📱 旗艦版司機遙控器 (V175 廣播中控台)</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
     body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; text-align: center; padding: 15px; background: #2c3e50; color: white; margin: 0; display: flex; flex-direction: column; box-sizing: border-box; min-height: 100vh; }
@@ -36,7 +36,7 @@
     .btn-reset{ background: #d35400; box-shadow: 0 4px 0 #a04000; }
     .slider-container { display: flex; align-items: center; gap: 10px; }
     input[type="range"] { flex: 1; accent-color: #2ecc71; }
-    
+
     /* 彈出視窗樣式 */
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 30000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
     .modal-content { background: white; color: #333; width: 90%; max-width: 400px; max-height: 85vh; border-radius: 16px; padding: 20px; overflow-y: auto; text-align: left; }
@@ -44,7 +44,6 @@
     .lang-select { padding: 6px; border-radius: 4px; border: 1px solid #ccc; width: 30%; margin-bottom: 5px; }
     .audio-setting-section { background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #eee; }
     #loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 40000; justify-content: center; align-items: center; flex-direction: column; color:#333; font-weight:bold; font-size:18px;}
-    #toast { visibility:hidden; position:fixed; bottom:50px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); color:white; padding:10px 20px; border-radius:20px; z-index:99999; font-size:14px; font-weight:bold;}
 </style>
 </head>
 <body>
@@ -71,7 +70,7 @@
             <button id="btn-gps" class="btn-action btn-gps btn-full" onclick="toggleGPS()">📡 開啟手機 GPS 串流</button>
             <div id="gps-status" style="font-size:13px; font-weight:bold; color:#ecf0f1; background:rgba(0,0,0,0.2); padding:8px; border-radius:6px;">等待啟動...</div>
         </div>
-        
+
         <div class="control-card">
             <div class="card-title">📍 路線載入與方向</div>
             <select id="route-select"><option value="">等待主機回傳路線列表...</option></select>
@@ -101,7 +100,7 @@
     <div id="audio-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">⚙️ 語音金庫與設定<button onclick="document.getElementById('audio-modal').style.display='none'" style="border:none;background:none;font-size:20px;">✕</button></div>
-            
+
             <div class="audio-setting-section" style="background:#e3f2fd; border-color:#b3e5fc;">
                 <h4 style="margin-top:0; color:#0277bd;">☁️ 同步 GitHub 語音包</h4>
                 <input type="text" id="gh-repo-url" placeholder="專案連結 (例: https://github.com/...)" style="width:100%; margin-bottom:8px; box-sizing:border-box;">
@@ -117,36 +116,18 @@
                 <select id="pids-l3" class="lang-select"><option value="zh">中文</option><option value="en">英文</option><option value="tw" selected>台語</option><option value="hk">客語</option><option value="yue">粵語</option><option value="none">無</option></select> ➔
                 <select id="pids-l4" class="lang-select"><option value="zh">中文</option><option value="en">英文</option><option value="tw">台語</option><option value="hk" selected>客語</option><option value="yue">粵語</option><option value="none">無</option></select>
             </div>
-            
+
             <div class="audio-setting-section">
-                <h4 style="margin-top:0;">2. 播報觸發模式</h4>
-                <select id="pids-play-mode" style="width:100%; margin-bottom:10px;">
-                    <option value="smart" selected>💡 智慧模式 (站距 < 300m 不播即將抵達)</option>
-                    <option value="all">傳統模式 (強制兩個都播)</option>
-                    <option value="next_only">只播「下一站」</option>
-                    <option value="arr_only">只播「即將抵達」</option>
-                </select>
-                
-                <h4 style="margin-top:0;">3. 語音停頓間隔</h4>
-                <select id="pids-audio-gap" style="width:100%;">
-                    <option value="0">無間隔 (緊湊)</option>
-                    <option value="200" selected>極短停頓 (0.2秒)</option>
-                    <option value="400">短停頓 (0.4秒)</option>
-                    <option value="800">標準停頓 (0.8秒)</option>
-                </select>
-            </div>
-            
-            <div class="audio-setting-section">
-                <h4 style="margin-top:0;">4. 到站播報格式</h4>
+                <h4 style="margin-top:0;">2. 到站播報格式</h4>
                 <select id="pids-arr-format" style="width:100%;"><option value="auto" selected>自動偵測</option><option value="prefix">強制：[即將抵達] ➔ [站名]</option><option value="suffix">強制：[站名] ➔ [到了]</option></select>
             </div>
-            
+
             <button onclick="savePidsDefaults()" style="width:100%; padding:12px; background:#4caf50; color:white; border:none; border-radius:8px; font-size:16px; font-weight:bold;">💾 儲存設定</button>
         </div>
     </div>
 
     <div id="loading-overlay">處理中，請稍候...</div>
-    <div id="toast"></div>
+    <div id="toast" style="visibility:hidden; position:fixed; bottom:50px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); color:white; padding:10px 20px; border-radius:20px; z-index:99999;"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -159,7 +140,7 @@
             messagingSenderId: "1056982339472", appId: "1:1056982339472:web:533e3875eab63b32936d15"
         };
         const app = initializeApp(firebaseConfig); const db = getDatabase(app);
-        
+
         let isConnected = false; let currentBusId = ""; let unsubscribeState = null; let unsubscribeAudio = null;
         let gpsWatchId = null; let gpsIntervalId = null; let isGpsActive = false; let wakeLock = null; let heartbeatInterval = null;
 
@@ -172,7 +153,7 @@
         window.onload = async function() {
             document.getElementById('gh-repo-url').value = localStorage.getItem('remote_github_url') || '';
             document.getElementById('gh-token').value = localStorage.getItem('remote_github_token') || '';
-            ['l1', 'l2', 'l3', 'l4', 'arr-format', 'play-mode', 'audio-gap'].forEach(k => { 
+            ['l1', 'l2', 'l3', 'l4', 'arr-format'].forEach(k => { 
                 let el = document.getElementById('pids-'+k); let val = localStorage.getItem('remote_pids_'+k); 
                 if (el && val) el.value = val; 
             });
@@ -187,18 +168,16 @@
                 btn.innerText = "斷開連線"; btn.classList.add("connected");
                 document.getElementById('control-panel').classList.add("active");
                 document.getElementById('status-panel').style.display = "block";
-                
-                // 🔓 強制解鎖手機瀏覽器聲音限制 (必須在點擊事件內觸發)
+
+                // 🔓 解鎖手機語音權限
                 if (window.speechSynthesis) { let unlockTTS = new SpeechSynthesisUtterance(''); unlockTTS.volume = 0; window.speechSynthesis.speak(unlockTTS); }
                 try { const unlockAudio = new Audio("data:audio/mp3;base64,//M0QAAAAHPTT3IAQAAKAAQAAH4EAAABACAAAIAiAAgH/4//wMAAAB/8AAA/wD///3/8/8D/////wAAADQAAP//gQAA"); unlockAudio.play().then(() => { unlockAudio.pause(); }).catch(e => {}); } catch(err) {}
 
                 listenToHostState();
                 listenToAudioTrigger();
-                
-                // 💓 啟動雲端心跳，告訴主機「手機活著，交出麥克風」
-                heartbeatInterval = setInterval(() => { 
-                    set(ref(db, 'buses/' + currentBusId + '/remote_status'), { alive: true, timestamp: Date.now() }); 
-                }, 3000);
+
+                // 💓 啟動雲端心跳發射器 (每3秒回報一次存活)
+                heartbeatInterval = setInterval(() => { set(ref(db, 'buses/' + currentBusId + '/remote_status'), { alive: true, timestamp: Date.now() }); }, 3000);
             } else {
                 input.disabled = false; isConnected = false; btn.innerText = "連線主機"; btn.classList.remove("connected");
                 document.getElementById('control-panel').classList.remove("active"); document.getElementById('status-panel').style.display = "none";
@@ -241,11 +220,11 @@
                     let destName = (data.destZH && data.destZH !== "---") ? `往 ${data.destZH} 方向` : "";
                     document.getElementById('st-dir').innerText = destName ? `${dirName} (${destName})` : dirName;
                     document.getElementById('st-stop').innerText = data.currentStop || '準備中...';
-                    
+
                     const pidsBtn = document.getElementById('btn-remote-pids');
                     if (data.isPidsRunning) { pidsBtn.innerText = "🛑 停止公車看板"; pidsBtn.classList.add('active'); } 
                     else { pidsBtn.innerText = "🚌 啟動公車看板"; pidsBtn.classList.remove('active'); }
-                    
+
                     if (data.routeList && Array.isArray(data.routeList)) {
                         const select = document.getElementById('route-select'); const currentVal = select.value; 
                         select.innerHTML = '<option value="">-- 請選擇要載入的專案 --</option>';
@@ -277,12 +256,7 @@
             set(ref(db, 'buses/' + currentBusId + '/command'), { action: 'SET_VOLUME', payload: window._globalVolume, timestamp: Date.now() });
         };
 
-        function showToast(msg) { 
-            const t = document.getElementById('toast'); 
-            t.innerText = msg; 
-            t.style.visibility = 'visible'; 
-            setTimeout(() => { t.style.visibility = 'hidden'; }, 3000); 
-        }
+        function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.style.visibility = 'visible'; setTimeout(() => t.style.visibility = 'hidden', 3000); }
 
         // ==========================================
         // 🎙️ 手機語音金庫與播報大腦
@@ -292,249 +266,184 @@
         async function savePidsAudioToDB(category, fileName, blob) { const db = await openPidsDB(); const tx = db.transaction(PIDS_STORE_NAME, "readwrite"); const key = `${category}___${fileName}`; tx.objectStore(PIDS_STORE_NAME).put(blob, key); }
         async function loadAllPidsAudioFromDB() { const db = await openPidsDB(); return new Promise((resolve) => { const tx = db.transaction(PIDS_STORE_NAME, "readonly"); const store = tx.objectStore(PIDS_STORE_NAME); const request = store.openCursor(); let loadedCounts = { common: 0, zh: 0, en: 0, tw: 0, hk: 0, yue: 0 }; request.onsuccess = (e) => { const cursor = e.target.result; if (cursor) { const key = cursor.key.toString(); const parts = key.split('___'); if (parts.length === 2) { const category = parts[0]; const fileName = parts[1]; const blob = cursor.value; if (window.pidsAssets[category]) { window.pidsAssets[category][fileName] = URL.createObjectURL(blob); loadedCounts[category]++; } } cursor.continue(); } else { resolve(loadedCounts); } }; }); }
         window.clearAllPidsAudioDB = async function() { if(!confirm("確定清空手機語音嗎？")) return; const db = await openPidsDB(); const tx = db.transaction(PIDS_STORE_NAME, "readwrite"); tx.objectStore(PIDS_STORE_NAME).clear(); window.pidsAssets = { common: {}, zh: {}, en: {}, tw: {}, hk: {}, yue: {} }; alert("✅ 已清空！"); };
-        window.savePidsDefaults = function() { ['l1', 'l2', 'l3', 'l4', 'arr-format', 'play-mode', 'audio-gap'].forEach(k => { let el = document.getElementById('pids-'+k); if (el) localStorage.setItem('remote_pids_'+k, el.value); }); showToast("✅ 設定已儲存"); document.getElementById('audio-modal').style.display='none'; };
+        window.savePidsDefaults = function() { ['l1', 'l2', 'l3', 'l4', 'arr-format'].forEach(k => { let el = document.getElementById('pids-'+k); if (el) localStorage.setItem('remote_pids_'+k, el.value); }); showToast("✅ 設定已儲存"); document.getElementById('audio-modal').style.display='none'; };
 
         window.syncGitHubAudio = async function() {
+            const urlInput = document.getElementById('gh-repo-url').value.trim(); const tokenInput = document.getElementById('gh-token').value.trim();
             const urlInput = document.getElementById('gh-repo-url').value.trim(); 
             const tokenInput = document.getElementById('gh-token').value.trim();
             if (!urlInput || !tokenInput) { alert("請填寫專案連結與 Token！"); return; }
+            const match = urlInput.match(/github\.com\/([^\/]+)\/([^\/]+)/); if (!match) { alert("連結格式錯誤！"); return; }
+            localStorage.setItem('remote_github_url', urlInput); localStorage.setItem('remote_github_token', tokenInput);
             const match = urlInput.match(/github\.com\/([^\/]+)\/([^\/]+)/); 
             if (!match) { alert("專案連結格式錯誤！"); return; }
+
+            const overlay = document.getElementById('loading-overlay'); 
+            overlay.style.display = 'flex'; overlay.innerText = "連線 GitHub 中...";
+            const owner = match[1]; 
+            const repo = match[2].replace('.git', ''); 
+            // 存入遙控器專屬的記憶體
+            localStorage.setItem('remote_github_url', urlInput); 
+            localStorage.setItem('remote_github_token', tokenInput);
             
-            const owner = match[1]; const repo = match[2].replace('.git', ''); 
-            localStorage.setItem('remote_github_url', urlInput); localStorage.setItem('remote_github_token', tokenInput);
-            
+            // 呼叫遙控器上的載入畫面
             const loadingOverlay = document.getElementById('loading-overlay');
-            loadingOverlay.style.display = 'flex'; loadingOverlay.innerText = "正在尋找 audio.zip...";
-            
+            loadingOverlay.style.display = 'flex'; 
+            loadingOverlay.innerText = "正在尋找 audio.zip...";
+
             try {
+                // 1. 取得檔案的基本資訊與 SHA 碼
+                const apiUrl = `https://api.github.com/repos/${match[1]}/${match[2].replace('.git', '')}/contents/audio.zip`; 
                 const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/audio.zip`; 
                 const fileRes = await fetch(apiUrl, { headers: { 'Authorization': `token ${tokenInput}` } });
+                if (!fileRes.ok) throw new Error("找不到 audio.zip，請檢查專案名稱或金鑰");
                 if (!fileRes.ok) throw new Error("找不到 audio.zip！");
                 
-                const fileData = await fileRes.json(); loadingOverlay.innerText = "正在高速下載 audio.zip...";
-                
-                // ✨ 指定接收 Raw 格式，避開限制
+                const fileData = await fileRes.json(); 
+                loadingOverlay.innerText = "正在高速下載 audio.zip...";
+
+                let zipBlob;
+                overlay.innerText = "下載語音包中 (檔案較大請耐心等候)...";
+
+                try {
+                    // 🚀 通道 A：嘗試直接免金鑰下載 (如果瀏覽器沒阻擋的話最快)
+                    const zipRes = await fetch(fileData.download_url);
+                    if (!zipRes.ok) throw new Error("Direct download blocked");
+                    zipBlob = await zipRes.blob(); 
+                } catch(err) {
+                    // 🛡️ 通道 B：如果通道 A 被 CORS 擋下，啟動 Git 核心下載法 (無懼跨網域限制)
+                    overlay.innerText = "啟動核心下載通道，處理中...";
+                    const blobApiUrl = `https://api.github.com/repos/${match[1]}/${match[2].replace('.git', '')}/git/blobs/${fileData.sha}`;
+                    const blobRes = await fetch(blobApiUrl, { headers: { 'Authorization': `token ${tokenInput}` } });
+                    if (!blobRes.ok) throw new Error("備用下載通道也失敗了");
+                    const blobData = await blobRes.json();
+                    
+                    // 將 Base64 數據還原成壓縮檔 (瀏覽器內建解碼引擎)
+                    const byteCharacters = atob(blobData.content.replace(/\n/g, ''));
+                    const byteArray = new Uint8Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteArray[i] = byteCharacters.charCodeAt(i);
+                    }
+                    zipBlob = new Blob([byteArray], {type: 'application/zip'});
+                }
+                // ✨ 主機端的黃金魔法指令：指定接收 Raw 格式，避開手機瀏覽器限制！
                 const zipRes = await fetch(fileData.url, { 
                     headers: { 'Authorization': `token ${tokenInput}`, 'Accept': 'application/vnd.github.v3.raw' } 
                 });
                 if (!zipRes.ok) throw new Error("ZIP 下載失敗");
-                
+
+                overlay.innerText = "解壓縮與建檔中...";
                 loadingOverlay.innerText = "下載完成！解壓縮中...";
-                const zipBlob = await zipRes.blob(); let zip = await JSZip.loadAsync(zipBlob);
+                const zipBlob = await zipRes.blob(); 
+                let zip = await JSZip.loadAsync(zipBlob);
                 
                 const folderMap = { '罐頭': 'common', 'common': 'common', '中文': 'zh', 'zh': 'zh', '英文': 'en', 'en': 'en', '台語': 'tw', 'tw': 'tw', '客語': 'hk', 'hk': 'hk', '粵語': 'yue', 'yue': 'yue' };
                 let totalDownloaded = 0;
-                
+
                 for (let path of Object.keys(zip.files)) {
                     if (!zip.files[path].dir && !path.includes('__MACOSX')) {
                         let fileName = path.split('/').pop(); let sysFolder = null;
                         for (let [zhName, codeName] of Object.entries(folderMap)) { if (path.includes(zhName + '/')) { sysFolder = codeName; break; } }
+                        if (sysFolder && fileName.match(/\.(mp3|wav|m4a|aac)$/i)) {
                         if (sysFolder && fileName.match(/\.(mp3|wav|m4a|ogg|aac)$/i)) {
                             let audioBlob = await zip.files[path].async("blob");
                             window.pidsAssets[sysFolder][fileName] = URL.createObjectURL(audioBlob);
+                            await savePidsAudioToDB(sysFolder, fileName, audioBlob); totalDownloaded++;
                             await savePidsAudioToDB(sysFolder, fileName, audioBlob); 
                             totalDownloaded++;
                         }
                     }
                 }
+                alert(`✅ 下載完成！共 ${totalDownloaded} 個音檔。`);
                 alert(`✅ 私密庫 ZIP 同步完成！\n共成功匯入 ${totalDownloaded} 個音檔。`);
             } catch(e) { 
+                alert(`❌ 發生錯誤：${e.message}`); 
+                console.error(e);
                 alert(`❌ 同步失敗！\n${e.message}`); 
             } finally { 
+                overlay.style.display = 'none'; 
                 loadingOverlay.style.display = 'none'; 
             }
         };
-
-        // --- 接收主機廣播訊號 (完美首波防干擾版) ---
+        // --- 接收主機廣播訊號 ---
         let lastAudioId = null;
-        let isFirstEvent = true;
-
         function listenToAudioTrigger() {
-            isFirstEvent = true;
             unsubscribeAudio = onValue(ref(db, 'buses/' + currentBusId + '/audio_trigger'), (snap) => {
                 const data = snap.val();
-
-                // 第一關：連線瞬間的資料直接丟棄，不播報
-                if (isFirstEvent) {
-                    isFirstEvent = false;
-                    if (data) lastAudioId = data.id; 
-                    console.log("🗑️ 系統已就緒，隔離舊訊號");
-                    return; 
-                }
-
-                // 第二關：保證是全新訊號才觸發
                 if (data && data.id !== lastAudioId) {
                     lastAudioId = data.id;
-                    showToast(`📡 收到新廣播：${data.zh}`); // 顯示雷達
                     triggerRemoteAnnouncement(data);
                 }
             });
         }
 
-        // --- 核心播放邏輯 ---
-        function findPidsAudio(category, baseName) { 
-            if (!window.pidsAssets[category]) return null; 
-            const keys = Object.keys(window.pidsAssets[category]); 
-            for (let i = 0; i < keys.length; i++) { 
-                if (keys[i].replace(/\.[^/.]+$/, "").trim() === baseName.trim()) { 
-                    return window.pidsAssets[category][keys[i]]; 
-                } 
-            } 
-            return null; 
-        }
-        
-        function getPrefixSuffix(lang, type) { 
-            let url = findPidsAudio(lang, type); if (url) return { type: 'audio', src: url }; 
-            let lName = ''; if (lang === 'zh') lName = '中文'; else if (lang === 'en') lName = '英文'; else if (lang === 'tw') lName = '台語'; else if (lang === 'hk') lName = '客語'; else if (lang === 'yue') lName = '粵語'; 
-            if (lName) { 
-                url = findPidsAudio('common', `${type}(${lName})`); if (url) return { type: 'audio', src: url }; 
-                url = findPidsAudio('common', `${type}${lName}`); if (url) return { type: 'audio', src: url }; 
-            } 
-            return null; 
-        }
-        
+        function findPidsAudio(category, baseName) { if (!window.pidsAssets[category]) return null; const keys = Object.keys(window.pidsAssets[category]); for (let i = 0; i < keys.length; i++) { if (keys[i].replace(/\.[^/.]+$/, "").trim() === baseName.trim()) { return window.pidsAssets[category][keys[i]]; } } return null; }
+        function getPrefixSuffix(lang, type) { let url = findPidsAudio(lang, type); if (url) return { type: 'audio', src: url }; let lName = ''; if (lang === 'zh') lName = '中文'; else if (lang === 'en') lName = '英文'; else if (lang === 'tw') lName = '台語'; else if (lang === 'hk') lName = '客語'; else if (lang === 'yue') lName = '粵語'; if (lName) { url = findPidsAudio('common', `${type}(${lName})`); if (url) return { type: 'audio', src: url }; url = findPidsAudio('common', `${type}${lName}`); if (url) return { type: 'audio', src: url }; } return null; }
+
         function pushQA(lang, phrase, idx, isGlobalFallback = false) {
-            let a = getPrefixSuffix(lang, phrase); 
-            if(a) { 
-                pidsPlayQueue.push(a); 
-                return; 
-            }
+            let a = getPrefixSuffix(lang, phrase); if(a) { pidsPlayQueue.push(a); return; }
             if(idx === 0 || isGlobalFallback) {
-                let g = findPidsAudio('common', phrase); 
-                if(g) { 
-                    pidsPlayQueue.push({type:'audio', src:g}); 
-                } else { 
-                    pidsPlayQueue.push({type:'tts', text: phrase, lang: lang==='en'?'en-US':'zh-TW'}); 
-                }
+                let g = findPidsAudio('common', phrase); if(g) { pidsPlayQueue.push({type:'audio', src:g}); }
+                else { pidsPlayQueue.push({type:'tts', text: phrase, lang: lang==='en'?'en-US':'zh-TW'}); } // 簡化 TTS
             }
         }
-        
+
         function triggerRemoteAnnouncement(data) {
             pidsAnnounceId++; const myId = pidsAnnounceId;
-            
-            // 停止當前聲音
             if (window._activeAudio) { try{window._activeAudio.pause();}catch(e){} window._activeAudio=null; }
-            if (window._activeAudioCleanup) window._activeAudioCleanup(); 
-            if (window.speechSynthesis) window.speechSynthesis.cancel();
-            
-            pidsPlayQueue = []; window.pidsIsPlaying = false;
-            
-            // 取得播報模式
-            const playMode = document.getElementById('pids-play-mode').value;
-            
-            // 模式攔截判斷
-            if (playMode === 'next_only' && data.mode === 'arr') return;
-            if (playMode === 'arr_only' && data.mode === 'next') return;
-            if (playMode === 'smart' && data.mode === 'arr') {
-                if (data.dist !== undefined && data.dist !== null && data.dist < 300) {
-                    console.log("💡 智慧模式攔截：站距過近");
-                    return; 
-                }
-            }
+            if (window._activeAudioCleanup) window._activeAudioCleanup(); if (window.speechSynthesis) window.speechSynthesis.cancel();
+            pidsPlayQueue = []; window.pidsIsPlaying = false; 
 
             const format = document.getElementById('pids-arr-format').value;
-            const l1 = document.getElementById('pids-l1').value; 
-            const l2 = document.getElementById('pids-l2').value; 
-            const l3 = document.getElementById('pids-l3').value; 
-            const l4 = document.getElementById('pids-l4').value;
+            const l1 = document.getElementById('pids-l1').value; const l2 = document.getElementById('pids-l2').value; const l3 = document.getElementById('pids-l3').value; const l4 = document.getElementById('pids-l4').value;
             const finalOrder = [...new Set([l1, l2, l3, l4])].filter(l => l !== 'none');
-            
+
             const isTerm = data.isTerm; const sNameZH = data.zh; const sNameEN = data.en;
             const hasTerm = !!findPidsAudio('common', '終點站') || finalOrder.some(l => getPrefixSuffix(l, '終點站'));
             const hasTermArr = !!findPidsAudio('common', '終點站到了') || finalOrder.some(l => getPrefixSuffix(l, '終點站到了'));
 
             const addLangToQueue = (lang) => {
                 let url = null, ttsText = null, ttsLang = 'zh-TW';
-                if (lang === 'zh') { url = findPidsAudio('zh', sNameZH); ttsText = sNameZH; } 
-                else if (lang === 'en') { url = findPidsAudio('en', sNameZH); ttsText = sNameEN; ttsLang = 'en-US'; } 
-                else if (lang === 'tw') url = findPidsAudio('tw', sNameZH); 
-                else if (lang === 'hk') url = findPidsAudio('hk', sNameZH); 
-                else if (lang === 'yue') { url = findPidsAudio('yue', sNameZH); ttsText = sNameZH; ttsLang = 'zh-HK'; }
-                
-                if (url) pidsPlayQueue.push({ type: 'audio', src: url }); 
-                else if (ttsText) pidsPlayQueue.push({ type: 'tts', text: ttsText, lang: ttsLang });
+                if (lang === 'zh') { url = findPidsAudio('zh', sNameZH); ttsText = sNameZH; } else if (lang === 'en') { url = findPidsAudio('en', sNameZH); ttsText = sNameEN; ttsLang = 'en-US'; } else if (lang === 'tw') url = findPidsAudio('tw', sNameZH); else if (lang === 'hk') url = findPidsAudio('hk', sNameZH); else if (lang === 'yue') { url = findPidsAudio('yue', sNameZH); ttsText = sNameZH; ttsLang = 'zh-HK'; }
+                if (url) pidsPlayQueue.push({ type: 'audio', src: url }); else if (ttsText) pidsPlayQueue.push({ type: 'tts', text: ttsText, lang: ttsLang });
             };
 
             if (data.mode === 'next') {
-                finalOrder.forEach((lang, index) => { 
-                    pushQA(lang, '下一站', index); 
-                    if (isTerm && hasTerm) pushQA(lang, '終點站', index); 
-                    addLangToQueue(lang); 
-                });
+                finalOrder.forEach((lang, index) => { pushQA(lang, '下一站', index); if (isTerm && hasTerm) pushQA(lang, '終點站', index); addLangToQueue(lang); });
             } else if (data.mode === 'arr') {
                 let useSuffix = (format === 'suffix') || (format === 'auto' && (!!findPidsAudio('common', '到了') || finalOrder.some(l => getPrefixSuffix(l, '到了'))));
                 finalOrder.forEach((lang, index) => {
-                    if (isTerm && hasTermArr) { 
-                        pushQA(lang, '終點站到了', index); addLangToQueue(lang); 
-                    } else if (isTerm && hasTerm) { 
-                        if (useSuffix) { pushQA(lang, '終點站', index); addLangToQueue(lang); pushQA(lang, '到了', index); } 
-                        else { pushQA(lang, '即將抵達', index); pushQA(lang, '終點站', index); addLangToQueue(lang); } 
-                    } else { 
-                        if (useSuffix) { addLangToQueue(lang); pushQA(lang, '到了', index); } 
-                        else { pushQA(lang, '即將抵達', index); addLangToQueue(lang); } 
-                    }
+                    if (isTerm && hasTermArr) { pushQA(lang, '終點站到了', index); addLangToQueue(lang); } 
+                    else if (isTerm && hasTerm) { if (useSuffix) { pushQA(lang, '終點站', index); addLangToQueue(lang); pushQA(lang, '到了', index); } else { pushQA(lang, '即將抵達', index); pushQA(lang, '終點站', index); addLangToQueue(lang); } } 
+                    else { if (useSuffix) { addLangToQueue(lang); pushQA(lang, '到了', index); } else { pushQA(lang, '即將抵達', index); addLangToQueue(lang); } }
                 });
             }
-            
             processPidsQueue(myId);
         }
 
-        // --- 播放引擎 (支援語音間隔) ---
         async function processPidsQueue(announceId) {
-            if (window.pidsIsPlaying) return; 
-            window.pidsIsPlaying = true;
-            
+            if (window.pidsIsPlaying) return; window.pidsIsPlaying = true;
             while (pidsPlayQueue.length > 0) {
                 if (announceId !== pidsAnnounceId) break; 
                 const item = pidsPlayQueue.shift();
-                
                 if (item.type === 'audio') {
                     await new Promise((resolve) => {
-                        let isDone = false; let timeoutId; 
-                        const audio = new Audio(item.src); 
-                        audio.volume = window._globalVolume; 
-                        window._activeAudio = audio;
-                        
-                        const cleanup = () => { 
-                            if(isDone) return; 
-                            isDone = true; 
-                            clearTimeout(timeoutId); 
-                            audio.onended = null; audio.onerror = null; 
-                            if(window._activeAudio === audio) window._activeAudio = null; 
-                            if(window._activeAudioCleanup === cleanup) window._activeAudioCleanup = null; 
-                            resolve(); 
-                        };
-                        
-                        window._activeAudioCleanup = cleanup; 
-                        audio.onended = cleanup; 
-                        audio.onerror = cleanup; 
-                        timeoutId = setTimeout(cleanup, 10000);
-                        audio.addEventListener('loadedmetadata', () => { 
-                            if(!isDone){ clearTimeout(timeoutId); timeoutId = setTimeout(cleanup, (audio.duration * 1000) + 3000); } 
-                        });
-                        audio.play().catch(e => { console.warn("瀏覽器阻擋播放"); cleanup(); });
+                        let isDone = false; let timeoutId; const audio = new Audio(item.src); audio.volume = window._globalVolume; window._activeAudio = audio;
+                        const cleanup = () => { if(isDone) return; isDone = true; clearTimeout(timeoutId); audio.onended=null; audio.onerror=null; if(window._activeAudio===audio) window._activeAudio=null; if(window._activeAudioCleanup===cleanup) window._activeAudioCleanup=null; resolve(); };
+                        window._activeAudioCleanup = cleanup; audio.onended = cleanup; audio.onerror = cleanup; timeoutId = setTimeout(cleanup, 10000);
+                        audio.addEventListener('loadedmetadata', () => { if(!isDone){ clearTimeout(timeoutId); timeoutId = setTimeout(cleanup, (audio.duration*1000)+3000); } });
+                        audio.play().catch(e => cleanup());
                     });
                 } else if (item.type === 'tts') {
                     await new Promise((resolve) => {
                         if (!window.speechSynthesis) { resolve(); return; } 
                         let timeoutId; try {
-                            window.speechSynthesis.cancel(); 
-                            const u = new SpeechSynthesisUtterance(item.text); 
-                            let isDone = false; 
+                            window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(item.text); let isDone = false; 
                             const cleanup = () => { if(isDone) return; isDone = true; clearTimeout(timeoutId); u.onend=null; u.onerror=null; resolve(); };
                             u.lang = item.lang || 'zh-TW'; u.rate = 0.9; u.volume = window._globalVolume; u.onend = cleanup; u.onerror = cleanup;
-                            timeoutId = setTimeout(cleanup, 8000); 
-                            window.speechSynthesis.speak(u);
+                            timeoutId = setTimeout(cleanup, 8000); window.speechSynthesis.speak(u);
                         } catch(e) { resolve(); }
                     });
-                }
-
-                // 停頓間隔
-                if (announceId !== pidsAnnounceId) break;
-                const gapMs = parseInt(document.getElementById('pids-audio-gap').value) || 0;
-                if (pidsPlayQueue.length > 0 && gapMs > 0) {
-                    await new Promise(r => setTimeout(r, gapMs));
                 }
             }
             if (announceId === pidsAnnounceId) window.pidsIsPlaying = false;
