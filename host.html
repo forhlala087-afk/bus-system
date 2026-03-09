@@ -393,42 +393,47 @@
                 }
 
                 window._isHostConnected = true;
-                let lastCmdTime = 0;
+let lastCmdTime = 0;
 
-                // 監聽來自遙控器的指令
-                fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/command'), (snap) => {
-                    const data = snap.val();
-                    if(data && data.timestamp > lastCmdTime) {
-                        lastCmdTime = data.timestamp;
-                        executeRemoteCommand(data);
-                    }
-                });
+// ✨ 1. 每次連線前，先砍掉上一個車號的舊監聽器 (防幽靈連線)
+if (window.unsubCmd) window.unsubCmd();
+if (window.unsubGps) window.unsubGps();
+if (window.unsubStatus) window.unsubStatus();
 
-                // 監聽來自遙控器的 GPS
-                fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/gps'), (snap) => {
-                    if(window._useRemoteGps) {
-                        const data = snap.val();
-                        if(data) {
-                            onLocationUpdate({ coords: { latitude: data.lat, longitude: data.lon, heading: data.heading, speed: data.speed }});
-                        }
-                    }
-                });
-                // 💓 偵測手機遙控器是否存活 (智慧靜音切換)
-                window._remoteIsAlive = false;
-                let remoteTimeout = null;
-                fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status'), (snap) => {
-                    const data = snap.val();
-                    if (data && data.timestamp) {
-                        if (Date.now() - data.timestamp < 10000) { // 10秒內收到訊號都算手機活著
-                            window._remoteIsAlive = true;
-                            if (remoteTimeout) clearTimeout(remoteTimeout);
-                            remoteTimeout = setTimeout(() => { 
-                                window._remoteIsAlive = false; 
-                                showToast("⚠️ 遙控器斷線，主機喇叭接管！"); 
-                            }, 10000); // 10秒沒收到心跳就判定手機陣亡
-                        }
-                    }
-                });
+// ✨ 2. 重新建立新車號的監聽器，並把它們存進變數裡
+// 監聽來自遙控器的指令
+window.unsubCmd = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/command'), (snap) => {
+    const data = snap.val();
+    if(data && data.timestamp > lastCmdTime) {
+        lastCmdTime = data.timestamp;
+        executeRemoteCommand(data);
+    }
+});
+
+// 監聽來自遙控器的 GPS
+window.unsubGps = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/gps'), (snap) => {
+    if(window._useRemoteGps) {
+        const data = snap.val();
+        if(data) {
+            onLocationUpdate({ coords: { latitude: data.lat, longitude: data.lon, heading: data.heading, speed: data.speed }});
+        }
+    }
+});
+
+// 💓 偵測手機遙控器是否存活 (無視時差版)
+window._remoteIsAlive = false;
+let remoteTimeout = null;
+window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status'), (snap) => {
+    const data = snap.val();
+    if (data && data.alive) {
+        window._remoteIsAlive = true;
+        if (remoteTimeout) clearTimeout(remoteTimeout);
+        remoteTimeout = setTimeout(() => { 
+            window._remoteIsAlive = false; 
+            showToast("⚠️ 遙控器斷線，主機喇叭接管！"); 
+        }, 10000); 
+    }
+});
                 
                 pushStateToFirebase();
                 btnConnect.innerText = "✅ 雲端綁定成功";
