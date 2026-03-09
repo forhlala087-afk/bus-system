@@ -365,40 +365,56 @@
         function findPidsAudio(category, baseName) { if (!window.pidsAssets[category]) return null; const keys = Object.keys(window.pidsAssets[category]); for (let i = 0; i < keys.length; i++) { if (keys[i].replace(/\.[^/.]+$/, "").trim() === baseName.trim()) { return window.pidsAssets[category][keys[i]]; } } return null; }
         function getPrefixSuffix(lang, type) { let url = findPidsAudio(lang, type); if (url) return { type: 'audio', src: url }; let lName = ''; if (lang === 'zh') lName = '中文'; else if (lang === 'en') lName = '英文'; else if (lang === 'tw') lName = '台語'; else if (lang === 'hk') lName = '客語'; else if (lang === 'yue') lName = '粵語'; if (lName) { url = findPidsAudio('common', `${type}(${lName})`); if (url) return { type: 'audio', src: url }; url = findPidsAudio('common', `${type}${lName}`); if (url) return { type: 'audio', src: url }; } return null; }
         
-        function pushQA(lang, phrase, idx, currentId, isGlobalFallback = false) {
+        function pushQA(lang, phrase, idx, isGlobalFallback = false) {
             let a = getPrefixSuffix(lang, phrase); 
             if(a) { 
-                pidsPlayQueue.push({ ...a, announceId: currentId }); 
+                pidsPlayQueue.push(a); 
                 return; 
             }
+            // 如果沒找到音檔，且是第一種語言或是強制回退，才用 TTS
             if(idx === 0 || isGlobalFallback) {
                 let g = findPidsAudio('common', phrase); 
                 if(g) { 
-                    pidsPlayQueue.push({type:'audio', src:g, announceId: currentId}); 
+                    pidsPlayQueue.push({type:'audio', src:g}); 
                 } else { 
-                    pidsPlayQueue.push({type:'tts', text: phrase, lang: lang==='en'?'en-US':'zh-TW', announceId: currentId}); 
+                    pidsPlayQueue.push({type:'tts', text: phrase, lang: lang==='en'?'en-US':'zh-TW'}); 
                 }
             }
         }
-
+        
         function triggerRemoteAnnouncement(data) {
             pidsAnnounceId++; const myId = pidsAnnounceId;
+            // 停止目前正在播放的聲音
             if (window._activeAudio) { try{window._activeAudio.pause();}catch(e){} window._activeAudio=null; }
-            if (window._activeAudioCleanup) window._activeAudioCleanup(); if (window.speechSynthesis) window.speechSynthesis.cancel();
-            pidsPlayQueue = []; window.pidsIsPlaying = false;
+            if (window._activeAudioCleanup) window._activeAudioCleanup(); 
+            if (window.speechSynthesis) window.speechSynthesis.cancel();
             
+            pidsPlayQueue = []; 
+            window.pidsIsPlaying = false;
+            
+            // ✨ 播報模式與 300m 智慧攔截器 (修正版)
             const playMode = document.getElementById('pids-play-mode').value;
             if (playMode === 'next_only' && data.mode === 'arr') return;
             if (playMode === 'arr_only' && data.mode === 'next') return;
+            
+            // 只有在「明確知道距離且小於300m」的情況下才攔截
             if (playMode === 'smart' && data.mode === 'arr') {
-                if (data.dist && data.dist < 300) return; 
+                if (typeof data.dist !== 'undefined' && data.dist !== null && data.dist < 300) {
+                    console.log("💡 智慧模式攔截：站距過近，不播報即將抵達");
+                    return; 
+                }
             }
 
             const format = document.getElementById('pids-arr-format').value;
-            const l1 = document.getElementById('pids-l1').value; const l2 = document.getElementById('pids-l2').value; const l3 = document.getElementById('pids-l3').value; const l4 = document.getElementById('pids-l4').value;
+            const l1 = document.getElementById('pids-l1').value; 
+            const l2 = document.getElementById('pids-l2').value; 
+            const l3 = document.getElementById('pids-l3').value; 
+            const l4 = document.getElementById('pids-l4').value;
             const finalOrder = [...new Set([l1, l2, l3, l4])].filter(l => l !== 'none');
             
-            const isTerm = data.isTerm; const sNameZH = data.zh; const sNameEN = data.en;
+            const isTerm = data.isTerm; 
+            const sNameZH = data.zh; 
+            const sNameEN = data.en;
             const hasTerm = !!findPidsAudio('common', '終點站') || finalOrder.some(l => getPrefixSuffix(l, '終點站'));
             const hasTermArr = !!findPidsAudio('common', '終點站到了') || finalOrder.some(l => getPrefixSuffix(l, '終點站到了'));
 
@@ -409,24 +425,28 @@
                 else if (lang === 'tw') url = findPidsAudio('tw', sNameZH); 
                 else if (lang === 'hk') url = findPidsAudio('hk', sNameZH); 
                 else if (lang === 'yue') { url = findPidsAudio('yue', sNameZH); ttsText = sNameZH; ttsLang = 'zh-HK'; }
-                if (url) pidsPlayQueue.push({ type: 'audio', src: url, announceId: myId }); 
-                else if (ttsText) pidsPlayQueue.push({ type: 'tts', text: ttsText, lang: ttsLang, announceId: myId });
+                
+                if (url) pidsPlayQueue.push({ type: 'audio', src: url }); 
+                else if (ttsText) pidsPlayQueue.push({ type: 'tts', text: ttsText, lang: ttsLang });
             };
 
             if (data.mode === 'next') {
-                // ⚠️ 注意：這裡多傳了一個 myId 給 pushQA
-                finalOrder.forEach((lang, index) => { pushQA(lang, '下一站', index, myId); if (isTerm && hasTerm) pushQA(lang, '終點站', index, myId); addLangToQueue(lang); });
+                finalOrder.forEach((lang, index) => { 
+                    pushQA(lang, '下一站', index); 
+                    if (isTerm && hasTerm) pushQA(lang, '終點站', index); 
+                    addLangToQueue(lang); 
+                });
             } else if (data.mode === 'arr') {
                 let useSuffix = (format === 'suffix') || (format === 'auto' && (!!findPidsAudio('common', '到了') || finalOrder.some(l => getPrefixSuffix(l, '到了'))));
                 finalOrder.forEach((lang, index) => {
-                    if (isTerm && hasTermArr) { pushQA(lang, '終點站到了', index, myId); addLangToQueue(lang); } 
-                    else if (isTerm && hasTerm) { 
-                        if (useSuffix) { pushQA(lang, '終點站', index, myId); addLangToQueue(lang); pushQA(lang, '到了', index, myId); } 
-                        else { pushQA(lang, '即將抵達', index, myId); pushQA(lang, '終點站', index, myId); addLangToQueue(lang); } 
-                    } 
-                    else { 
-                        if (useSuffix) { addLangToQueue(lang); pushQA(lang, '到了', index, myId); } 
-                        else { pushQA(lang, '即將抵達', index, myId); addLangToQueue(lang); } 
+                    if (isTerm && hasTermArr) { 
+                        pushQA(lang, '終點站到了', index); addLangToQueue(lang); 
+                    } else if (isTerm && hasTerm) { 
+                        if (useSuffix) { pushQA(lang, '終點站', index); addLangToQueue(lang); pushQA(lang, '到了', index); } 
+                        else { pushQA(lang, '即將抵達', index); pushQA(lang, '終點站', index); addLangToQueue(lang); } 
+                    } else { 
+                        if (useSuffix) { addLangToQueue(lang); pushQA(lang, '到了', index); } 
+                        else { pushQA(lang, '即將抵達', index); addLangToQueue(lang); } 
                     }
                 });
             }
