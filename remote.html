@@ -273,16 +273,29 @@
             if (!urlInput || !tokenInput) { alert("請填寫專案連結與 Token！"); return; }
             const match = urlInput.match(/github\.com\/([^\/]+)\/([^\/]+)/); if (!match) { alert("連結格式錯誤！"); return; }
             localStorage.setItem('remote_github_url', urlInput); localStorage.setItem('remote_github_token', tokenInput);
-            const overlay = document.getElementById('loading-overlay'); overlay.style.display = 'flex'; overlay.innerText = "下載語音包中...";
+            
+            const overlay = document.getElementById('loading-overlay'); 
+            overlay.style.display = 'flex'; overlay.innerText = "連線 GitHub 中...";
+            
             try {
+                // 1. 先取得檔案的真實下載連結
                 const apiUrl = `https://api.github.com/repos/${match[1]}/${match[2].replace('.git', '')}/contents/audio.zip`; 
                 const fileRes = await fetch(apiUrl, { headers: { 'Authorization': `token ${tokenInput}` } });
-                if (!fileRes.ok) throw new Error("找不到 audio.zip");
-                const fileData = await fileRes.json(); overlay.innerText = "解壓縮中...";
-                const zipRes = await fetch(fileData.url, { headers: { 'Authorization': `token ${tokenInput}`, 'Accept': 'application/vnd.github.v3.raw' } });
-                const zipBlob = await zipRes.blob(); let zip = await JSZip.loadAsync(zipBlob);
+                if (!fileRes.ok) throw new Error("找不到 audio.zip (請檢查金鑰或網址)");
+                const fileData = await fileRes.json(); 
+                
+                overlay.innerText = "下載語音包中 (檔案較大請稍候)...";
+                
+                // 2. 使用真實連結下載 (⚠️ 關鍵修復：這裡絕對不能帶 GitHub Token，否則會被伺服器擋下)
+                const zipRes = await fetch(fileData.download_url);
+                if (!zipRes.ok) throw new Error("下載壓縮檔本體失敗");
+                const zipBlob = await zipRes.blob(); 
+                
+                overlay.innerText = "解壓縮與建檔中...";
+                let zip = await JSZip.loadAsync(zipBlob);
                 const folderMap = { '罐頭': 'common', 'common': 'common', '中文': 'zh', 'zh': 'zh', '英文': 'en', 'en': 'en', '台語': 'tw', 'tw': 'tw', '客語': 'hk', 'hk': 'hk', '粵語': 'yue', 'yue': 'yue' };
                 let totalDownloaded = 0;
+                
                 for (let path of Object.keys(zip.files)) {
                     if (!zip.files[path].dir && !path.includes('__MACOSX')) {
                         let fileName = path.split('/').pop(); let sysFolder = null;
@@ -295,7 +308,12 @@
                     }
                 }
                 alert(`✅ 下載完成！共 ${totalDownloaded} 個音檔。`);
-            } catch(e) { alert(`❌ 失敗：${e.message}`); } finally { overlay.style.display = 'none'; }
+            } catch(e) { 
+                alert(`❌ 發生錯誤：${e.message}`); 
+                console.error(e);
+            } finally { 
+                overlay.style.display = 'none'; 
+            }
         };
 
         // --- 接收主機廣播訊號 ---
