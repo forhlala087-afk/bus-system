@@ -278,20 +278,36 @@
             overlay.style.display = 'flex'; overlay.innerText = "連線 GitHub 中...";
             
             try {
-                // 1. 先取得檔案的真實下載連結
+                // 1. 取得檔案的基本資訊與 SHA 碼
                 const apiUrl = `https://api.github.com/repos/${match[1]}/${match[2].replace('.git', '')}/contents/audio.zip`; 
                 const fileRes = await fetch(apiUrl, { headers: { 'Authorization': `token ${tokenInput}` } });
-                if (!fileRes.ok) throw new Error("找不到 audio.zip (請檢查金鑰或網址)");
+                if (!fileRes.ok) throw new Error("找不到 audio.zip，請檢查專案名稱或金鑰");
                 const fileData = await fileRes.json(); 
                 
-                overlay.innerText = "下載語音包中 (檔案較大請稍候)...";
-                
-                // 2. 使用真實連結下載 (因為是 Private 專案，所以還是要帶上 Token 給 raw.githubusercontent 驗證)
-                const zipRes = await fetch(fileData.download_url, { 
-                    headers: { 'Authorization': `token ${tokenInput}` } 
-                });
-                if (!zipRes.ok) throw new Error("下載壓縮檔本體失敗");
-                const zipBlob = await zipRes.blob(); 
+                let zipBlob;
+                overlay.innerText = "下載語音包中 (檔案較大請耐心等候)...";
+
+                try {
+                    // 🚀 通道 A：嘗試直接免金鑰下載 (如果瀏覽器沒阻擋的話最快)
+                    const zipRes = await fetch(fileData.download_url);
+                    if (!zipRes.ok) throw new Error("Direct download blocked");
+                    zipBlob = await zipRes.blob(); 
+                } catch(err) {
+                    // 🛡️ 通道 B：如果通道 A 被 CORS 擋下，啟動 Git 核心下載法 (無懼跨網域限制)
+                    overlay.innerText = "啟動核心下載通道，處理中...";
+                    const blobApiUrl = `https://api.github.com/repos/${match[1]}/${match[2].replace('.git', '')}/git/blobs/${fileData.sha}`;
+                    const blobRes = await fetch(blobApiUrl, { headers: { 'Authorization': `token ${tokenInput}` } });
+                    if (!blobRes.ok) throw new Error("備用下載通道也失敗了");
+                    const blobData = await blobRes.json();
+                    
+                    // 將 Base64 數據還原成壓縮檔 (瀏覽器內建解碼引擎)
+                    const byteCharacters = atob(blobData.content.replace(/\n/g, ''));
+                    const byteArray = new Uint8Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteArray[i] = byteCharacters.charCodeAt(i);
+                    }
+                    zipBlob = new Blob([byteArray], {type: 'application/zip'});
+                }
                 
                 overlay.innerText = "解壓縮與建檔中...";
                 let zip = await JSZip.loadAsync(zipBlob);
@@ -317,7 +333,6 @@
                 overlay.style.display = 'none'; 
             }
         };
-
         // --- 接收主機廣播訊號 ---
         let lastAudioId = null;
         function listenToAudioTrigger() {
