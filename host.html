@@ -419,14 +419,20 @@
                 fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status'), (snap) => {
                     const data = snap.val();
                     if (data && data.timestamp) {
-                        if (Date.now() - data.timestamp < 10000) { // 10秒內收到訊號都算手機活著
-                            window._remoteIsAlive = true;
-                            if (remoteTimeout) clearTimeout(remoteTimeout);
-                            remoteTimeout = setTimeout(() => { 
-                                window._remoteIsAlive = false; 
-                                showToast("⚠️ 遙控器斷線，主機喇叭接管！"); 
-                            }, 10000); // 10秒沒收到心跳就判定手機陣亡
-                        }
+                        window._remoteIsAlive = false;
+                let remoteTimeout = null;
+                fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status'), (snap) => {
+                    const data = snap.val();
+                    if (data && data.alive) {
+                        // 只要 Firebase 有推播訊號過來，就代表手機是活著的！(完全不看時間戳記)
+                        window._remoteIsAlive = true;
+                        
+                        // 每次收到心跳，就重新倒數 10 秒
+                        if (remoteTimeout) clearTimeout(remoteTimeout);
+                        remoteTimeout = setTimeout(() => { 
+                            window._remoteIsAlive = false; 
+                            showToast("⚠️ 遙控器斷線，主機喇叭接管！"); 
+                        }, 10000); 
                     }
                 });
                 
