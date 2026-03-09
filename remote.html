@@ -78,10 +78,9 @@
             <select id="route-select">
                 <option value="">等待主機回傳路線列表...</option>
             </select>
-            <button class="btn-action btn-load btn-full" style="margin-bottom:10px;" onclick="sendLoadRoute()">📂 無縫載入所選路線</button>
             <div class="btn-grid">
-                <button class="btn-action btn-out" onclick="sendCommand('DIR_OUT')">🔵 去程</button>
-                <button class="btn-action btn-in" onclick="sendCommand('DIR_IN')">⚪ 返程</button>
+                <button class="btn-action btn-out" onclick="confirmAndLoadRoute('outbound')">🔵 去程</button>
+                <button class="btn-action btn-in" onclick="confirmAndLoadRoute('inbound')">⚪ 返程</button>
             </div>
         </div>
 
@@ -267,15 +266,24 @@
             }).then(() => { if (navigator.vibrate) navigator.vibrate(40); });
         };
 
-        window.sendLoadRoute = function() {
+        window.confirmAndLoadRoute = function(direction) {
             if (!isConnected) return;
-            const routeId = document.getElementById('route-select').value;
+            const select = document.getElementById('route-select');
+            const routeId = select.value;
             if (!routeId) { alert("請先選擇路線！"); return; }
-            set(ref(db, 'buses/' + currentBusId + '/command'), {
-                action: 'LOAD_ROUTE',
-                payload: routeId,
-                timestamp: Date.now()
-            }).then(() => { if (navigator.vibrate) navigator.vibrate(40); });
+            
+            // 抓取路線名稱與方向名稱
+            const routeName = select.options[select.selectedIndex].text;
+            const dirName = direction === 'outbound' ? '去程' : '返程';
+            
+            // 在手機端跳出確認視窗
+            if (confirm(`是否載入「${routeName}」路線，${dirName}？`)) {
+                set(ref(db, 'buses/' + currentBusId + '/command'), {
+                    action: 'LOAD_ROUTE_DIR',
+                    payload: { id: routeId, dir: direction },
+                    timestamp: Date.now()
+                }).then(() => { if (navigator.vibrate) navigator.vibrate(40); });
+            }
         };
 
         window.sendVolume = function(val) {
