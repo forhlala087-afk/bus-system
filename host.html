@@ -10,7 +10,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#1a1a1a">
 
-<title>GPS 導航 V168 (終極 APP 版)2</title>
+<title>GPS 導航 V168 (終極 APP 版)3</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -427,6 +427,12 @@
 
         function executeRemoteCommand(cmd) {
             switch(cmd.action) {
+                case 'LOAD_ROUTE_DIR': 
+            // 如果面板正在播報，先強制關閉以免卡住
+            if (window.isTrackingVideo || window.isTrackingPIDS) { window.stopTracking(); }
+            // 啟用「靜默模式 (true)」，主機就不會跳出確認視窗
+            window.loadRoute(cmd.payload.id, cmd.payload.dir, true); 
+            break;
                 case 'TOGGLE_PIDS': window.toggleTracking('pids'); break;
                 case 'NEXT': pidsNextAction(); break;
                 case 'PREV': pidsPrevStop(); break;
