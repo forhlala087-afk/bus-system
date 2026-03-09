@@ -413,7 +413,23 @@
                         }
                     }
                 });
-
+                // 💓 偵測手機遙控器是否存活 (智慧靜音切換)
+                window._remoteIsAlive = false;
+                let remoteTimeout = null;
+                fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status'), (snap) => {
+                    const data = snap.val();
+                    if (data && data.timestamp) {
+                        if (Date.now() - data.timestamp < 10000) { // 10秒內收到訊號都算手機活著
+                            window._remoteIsAlive = true;
+                            if (remoteTimeout) clearTimeout(remoteTimeout);
+                            remoteTimeout = setTimeout(() => { 
+                                window._remoteIsAlive = false; 
+                                showToast("⚠️ 遙控器斷線，主機喇叭接管！"); 
+                            }, 10000); // 10秒沒收到心跳就判定手機陣亡
+                        }
+                    }
+                });
+                
                 pushStateToFirebase();
                 btnConnect.innerText = "✅ 雲端綁定成功";
                 btnConnect.style.background = "#27ae60";
@@ -1527,6 +1543,18 @@
                 
                 let lastIdx = -1; for (let i = window.stops.length - 1; i >= 0; i--) { if (window.stops[i].enabled && !window.stops[i].mergedSkipped) { lastIdx = i; break; } }
                 const isTerm = (stationIdx === lastIdx);
+                // ✨ 智慧靜音分流器 (Smart Handoff) ✨
+                if (window._remoteIsAlive && window._isHostConnected) {
+                    // 手機活著！主機閉嘴，把播報任務丟上雲端交給手機
+                    fbSetRef(fbRef(fbDb, 'buses/' + window._currentBusId + '/audio_trigger'), {
+                        id: Date.now(), 
+                        mode: mode, 
+                        zh: s.nameZH, 
+                        en: s.nameEN, 
+                        isTerm: isTerm
+                    });
+                    return; // 主機直接結束任務，不發出聲音！
+                }
                 const hasTerm = !!findPidsAudio('common', '終點站') || finalOrder.some(l => getPrefixSuffix(l, '終點站'));
                 const hasTermArr = !!findPidsAudio('common', '終點站到了') || finalOrder.some(l => getPrefixSuffix(l, '終點站到了'));
 
