@@ -350,7 +350,14 @@
                 const data = snap.val();
                 if (data && data.id !== lastAudioId) {
                     lastAudioId = data.id;
-                    triggerRemoteAnnouncement(data);
+                    
+                    // ✨ 歷史幽靈過濾器：檢查這個訊號是不是「新鮮」的 (10秒內發出的)
+                    // 因為 data.id 是主機發送當下的時間戳記，我們拿現在時間減掉它
+                    if (Date.now() - data.id < 10000) {
+                        triggerRemoteAnnouncement(data);
+                    } else {
+                        console.log("👻 攔截到過期的歷史語音訊號，已略過不播報！");
+                    }
                 }
             });
         }
