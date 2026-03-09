@@ -1636,8 +1636,8 @@ window.unsubStatus = fbOnValueRef(fbRef(fbDb, 'buses/' + busId + '/remote_status
 
         window.pidsPrevStop = function() { if (window.isTrackingPIDS && hasFirstFix && !window._useRemoteGps) return; let prevIdx = -1; for(let i = window.pidsCurrentIndex - 1; i >= 0; i--) { if (window.stops[i].enabled && !window.stops[i].mergedSkipped) { prevIdx = i; break; } } if (prevIdx !== -1) { window.pidsCurrentIndex = prevIdx; window.isNextStopMode = true; document.getElementById('status-text-pids').innerText = "下一站 | Next Stop"; window.updatePidsDisplay(); } }
 
-        document.getElementById('pidsClickZone').addEventListener('click', function(e) { if (window.isTrackingPIDS && hasFirstFix && !window._useRemoteGps) return; const clickX = e.clientX; const screenWidth = window.innerWidth; if (clickX > screenWidth / 2) window.pidsNextAction(); else window.pidsPrevStop(); });
-        document.addEventListener('keydown', function(e) { if (!window.isTrackingPIDS) return; if (window.isTrackingPIDS && hasFirstFix && !window._useRemoteGps) return; if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); window.pidsNextAction(); } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { e.preventDefault(); window.pidsPrevStop(); } });
+        //document.getElementById('pidsClickZone').addEventListener('click', function(e) { if (window.isTrackingPIDS && hasFirstFix && !window._useRemoteGps) return; const clickX = e.clientX; const screenWidth = window.innerWidth; if (clickX > screenWidth / 2) window.pidsNextAction(); else window.pidsPrevStop(); });
+        //document.addEventListener('keydown', function(e) { if (!window.isTrackingPIDS) return; if (window.isTrackingPIDS && hasFirstFix && !window._useRemoteGps) return; if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); window.pidsNextAction(); } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { e.preventDefault(); window.pidsPrevStop(); } });
 
         function startPidsCycle() {
             if (pidsCycleInterval) clearInterval(pidsCycleInterval);
