@@ -269,48 +269,41 @@
         window.savePidsDefaults = function() { ['l1', 'l2', 'l3', 'l4', 'arr-format'].forEach(k => { let el = document.getElementById('pids-'+k); if (el) localStorage.setItem('remote_pids_'+k, el.value); }); showToast("✅ 設定已儲存"); document.getElementById('audio-modal').style.display='none'; };
 
         window.syncGitHubAudio = async function() {
-            const urlInput = document.getElementById('gh-repo-url').value.trim(); const tokenInput = document.getElementById('gh-token').value.trim();
+            const urlInput = document.getElementById('gh-repo-url').value.trim(); 
+            const tokenInput = document.getElementById('gh-token').value.trim();
             if (!urlInput || !tokenInput) { alert("請填寫專案連結與 Token！"); return; }
-            const match = urlInput.match(/github\.com\/([^\/]+)\/([^\/]+)/); if (!match) { alert("連結格式錯誤！"); return; }
-            localStorage.setItem('remote_github_url', urlInput); localStorage.setItem('remote_github_token', tokenInput);
+            const match = urlInput.match(/github\.com\/([^\/]+)\/([^\/]+)/); 
+            if (!match) { alert("專案連結格式錯誤！"); return; }
             
-            const overlay = document.getElementById('loading-overlay'); 
-            overlay.style.display = 'flex'; overlay.innerText = "連線 GitHub 中...";
+            const owner = match[1]; 
+            const repo = match[2].replace('.git', ''); 
+            // 存入遙控器專屬的記憶體
+            localStorage.setItem('remote_github_url', urlInput); 
+            localStorage.setItem('remote_github_token', tokenInput);
+            
+            // 呼叫遙控器上的載入畫面
+            const loadingOverlay = document.getElementById('loading-overlay');
+            loadingOverlay.style.display = 'flex'; 
+            loadingOverlay.innerText = "正在尋找 audio.zip...";
             
             try {
-                // 1. 取得檔案的基本資訊與 SHA 碼
-                const apiUrl = `https://api.github.com/repos/${match[1]}/${match[2].replace('.git', '')}/contents/audio.zip`; 
+                const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/audio.zip`; 
                 const fileRes = await fetch(apiUrl, { headers: { 'Authorization': `token ${tokenInput}` } });
-                if (!fileRes.ok) throw new Error("找不到 audio.zip，請檢查專案名稱或金鑰");
+                if (!fileRes.ok) throw new Error("找不到 audio.zip！");
+                
                 const fileData = await fileRes.json(); 
+                loadingOverlay.innerText = "正在高速下載 audio.zip...";
                 
-                let zipBlob;
-                overlay.innerText = "下載語音包中 (檔案較大請耐心等候)...";
-
-                try {
-                    // 🚀 通道 A：嘗試直接免金鑰下載 (如果瀏覽器沒阻擋的話最快)
-                    const zipRes = await fetch(fileData.download_url);
-                    if (!zipRes.ok) throw new Error("Direct download blocked");
-                    zipBlob = await zipRes.blob(); 
-                } catch(err) {
-                    // 🛡️ 通道 B：如果通道 A 被 CORS 擋下，啟動 Git 核心下載法 (無懼跨網域限制)
-                    overlay.innerText = "啟動核心下載通道，處理中...";
-                    const blobApiUrl = `https://api.github.com/repos/${match[1]}/${match[2].replace('.git', '')}/git/blobs/${fileData.sha}`;
-                    const blobRes = await fetch(blobApiUrl, { headers: { 'Authorization': `token ${tokenInput}` } });
-                    if (!blobRes.ok) throw new Error("備用下載通道也失敗了");
-                    const blobData = await blobRes.json();
-                    
-                    // 將 Base64 數據還原成壓縮檔 (瀏覽器內建解碼引擎)
-                    const byteCharacters = atob(blobData.content.replace(/\n/g, ''));
-                    const byteArray = new Uint8Array(byteCharacters.length);
-                    for (let i = 0; i < byteCharacters.length; i++) {
-                        byteArray[i] = byteCharacters.charCodeAt(i);
-                    }
-                    zipBlob = new Blob([byteArray], {type: 'application/zip'});
-                }
+                // ✨ 主機端的黃金魔法指令：指定接收 Raw 格式，避開手機瀏覽器限制！
+                const zipRes = await fetch(fileData.url, { 
+                    headers: { 'Authorization': `token ${tokenInput}`, 'Accept': 'application/vnd.github.v3.raw' } 
+                });
+                if (!zipRes.ok) throw new Error("ZIP 下載失敗");
                 
-                overlay.innerText = "解壓縮與建檔中...";
+                loadingOverlay.innerText = "下載完成！解壓縮中...";
+                const zipBlob = await zipRes.blob(); 
                 let zip = await JSZip.loadAsync(zipBlob);
+                
                 const folderMap = { '罐頭': 'common', 'common': 'common', '中文': 'zh', 'zh': 'zh', '英文': 'en', 'en': 'en', '台語': 'tw', 'tw': 'tw', '客語': 'hk', 'hk': 'hk', '粵語': 'yue', 'yue': 'yue' };
                 let totalDownloaded = 0;
                 
@@ -318,19 +311,19 @@
                     if (!zip.files[path].dir && !path.includes('__MACOSX')) {
                         let fileName = path.split('/').pop(); let sysFolder = null;
                         for (let [zhName, codeName] of Object.entries(folderMap)) { if (path.includes(zhName + '/')) { sysFolder = codeName; break; } }
-                        if (sysFolder && fileName.match(/\.(mp3|wav|m4a|aac)$/i)) {
+                        if (sysFolder && fileName.match(/\.(mp3|wav|m4a|ogg|aac)$/i)) {
                             let audioBlob = await zip.files[path].async("blob");
                             window.pidsAssets[sysFolder][fileName] = URL.createObjectURL(audioBlob);
-                            await savePidsAudioToDB(sysFolder, fileName, audioBlob); totalDownloaded++;
+                            await savePidsAudioToDB(sysFolder, fileName, audioBlob); 
+                            totalDownloaded++;
                         }
                     }
                 }
-                alert(`✅ 下載完成！共 ${totalDownloaded} 個音檔。`);
+                alert(`✅ 私密庫 ZIP 同步完成！\n共成功匯入 ${totalDownloaded} 個音檔。`);
             } catch(e) { 
-                alert(`❌ 發生錯誤：${e.message}`); 
-                console.error(e);
+                alert(`❌ 同步失敗！\n${e.message}`); 
             } finally { 
-                overlay.style.display = 'none'; 
+                loadingOverlay.style.display = 'none'; 
             }
         };
         // --- 接收主機廣播訊號 ---
