@@ -432,9 +432,32 @@
 
         window.sendCommand = (type) => set(ref(db, 'buses/'+currentBusId+'/command'), { action: type, timestamp: Date.now() });
         window.confirmAndLoadRoute = (dir) => {
-            const rid = document.getElementById('route-select').value;
+            const select = document.getElementById('route-select');
+            const rid = select.value;
             if(!rid) return alert("請選擇路線");
+            
+            // 抓取路線名稱和方向
+            const routeName = select.options[select.selectedIndex].text;
+            const dirName = dir === 'outbound' ? '🔵 去程' : '⚪ 返程';
+            
+            // 跳出選擇視窗
+            const wantStartPids = confirm(`即將載入「${routeName}」 ${dirName}\n\n是否要一併【啟動公車看板】？\n\n(按「確定」= 載入並自動啟動)\n(按「取消」= 僅載入路線)`);
+            
+            // 1. 先發送「載入路線」指令給主機
             set(ref(db, 'buses/'+currentBusId+'/command'), { action: 'LOAD_ROUTE_DIR', payload: { id: rid, dir: dir }, timestamp: Date.now() });
+            
+            // 2. 判斷司機的選擇並給予對應提示
+            if (wantStartPids) {
+                showToast("⏳ 路線載入中，即將啟動看板...");
+                setTimeout(() => {
+                    // 發送啟動看板指令
+                    set(ref(db, 'buses/'+currentBusId+'/command'), { action: 'TOGGLE_PIDS', timestamp: Date.now() });
+                    // ✨ 加上這行：指令發送後，跳出成功提示
+                    showToast("✅ 路線已載入 (已啟動看板)"); 
+                }, 800);
+            } else {
+                showToast("✅ 路線已載入 (未啟動看板)");
+            }
         };
         window.sendVolume = (v) => { window._globalVolume = v/100; set(ref(db, 'buses/'+currentBusId+'/command'), { action: 'SET_VOLUME', payload: v/100, timestamp: Date.now() }); };
         function showToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.visibility = 'visible'; setTimeout(()=>t.style.visibility='hidden', 3000); }
