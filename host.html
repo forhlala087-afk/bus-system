@@ -1129,6 +1129,14 @@
         window.startTracking = async function(mode) { 
             if (!navigator.geolocation && !window._useRemoteGps) { alert("不支援 GPS"); return; } 
             saveCurrentToProject(); resetStopsState();
+            
+            // 🔓 蘋果 iOS 專屬解鎖大法 (替共用音響拿通行證)
+            if (window.speechSynthesis) { let unlockTTS = new SpeechSynthesisUtterance(''); unlockTTS.volume = 0; window.speechSynthesis.speak(unlockTTS); }
+            try { 
+                pidsGlobalAudio.src = "data:audio/mp3;base64,//M0QAAAAHPTT3IAQAAKAAQAAH4EAAABACAAAIAiAAgH/4//wMAAAB/8AAA/wD///3/8/8D/////wAAADQAAP//gQAA"; 
+                pidsGlobalAudio.play().then(() => { pidsGlobalAudio.pause(); }).catch(e => {}); 
+            } catch(err) {}
+
             try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch(e){} 
             if (mode === 'video') { window.isTrackingVideo = true; isStickyLoop = false; btnVideo.innerText = "🛑 停止導航"; btnVideo.classList.add('stop'); btnPIDS.style.display = 'none'; elHeartbeat.innerHTML = '<span style="color:#ff9800; font-weight:bold;">📡 搜尋衛星中...</span>'; video.src = ""; video.muted = true; try { await video.play(); } catch(e) {} } 
             else if (mode === 'pids') {
@@ -1582,11 +1590,40 @@
                 const item = pidsPlayQueue.shift();
                 if (item.type === 'audio') {
                     await new Promise((resolve) => {
-                        let isDone = false; let timeoutId; const audio = new Audio(item.src); audio.volume = window._globalVolume; window._activeAudio = audio;
-                        const cleanup = () => { if(isDone) return; isDone = true; clearTimeout(timeoutId); audio.onended = null; audio.onerror = null; if (window._activeAudio === audio) window._activeAudio = null; if (window._activeAudioCleanup === cleanup) window._activeAudioCleanup = null; resolve(); };
-                        window._activeAudioCleanup = cleanup; audio.onended = cleanup; audio.onerror = () => { console.warn("音檔失敗:", item.src); cleanup(); }; timeoutId = setTimeout(cleanup, 15000);
-                        audio.addEventListener('loadedmetadata', () => { if (!isDone) { clearTimeout(timeoutId); const realDurationMs = (audio.duration * 1000) || 10000; timeoutId = setTimeout(cleanup, realDurationMs + 3000); } });
-                        const p = audio.play(); if(p !== undefined) p.catch(e => { console.error("音檔被阻擋", e); cleanup(); });
+                        let isDone = false; let timeoutId; 
+                        
+                        // ✨ 破解 iPad 封鎖：重複使用已解鎖的共用音響，只換錄音帶 ✨
+                        pidsGlobalAudio.src = item.src; 
+                        pidsGlobalAudio.volume = window._globalVolume; 
+                        window._activeAudio = pidsGlobalAudio;
+                        
+                        const cleanup = () => { 
+                            if(isDone) return; isDone = true; 
+                            clearTimeout(timeoutId); 
+                            pidsGlobalAudio.onended = null; 
+                            pidsGlobalAudio.onerror = null; 
+                            pidsGlobalAudio.onloadedmetadata = null;
+                            if (window._activeAudio === pidsGlobalAudio) window._activeAudio = null; 
+                            if (window._activeAudioCleanup === cleanup) window._activeAudioCleanup = null; 
+                            resolve(); 
+                        };
+                        
+                        window._activeAudioCleanup = cleanup; 
+                        pidsGlobalAudio.onended = cleanup; 
+                        pidsGlobalAudio.onerror = () => { console.warn("音檔失敗:", item.src); cleanup(); }; 
+                        timeoutId = setTimeout(cleanup, 15000);
+                        
+                        // 監聽載入完成來設定超時
+                        pidsGlobalAudio.onloadedmetadata = () => { 
+                            if (!isDone) { 
+                                clearTimeout(timeoutId); 
+                                const realDurationMs = (pidsGlobalAudio.duration * 1000) || 10000; 
+                                timeoutId = setTimeout(cleanup, realDurationMs + 3000); 
+                            } 
+                        };
+                        
+                        const p = pidsGlobalAudio.play(); 
+                        if(p !== undefined) p.catch(e => { console.error("iPad 封鎖了音檔", e); cleanup(); });
                     });
                 } else if (item.type === 'tts') {
                     await new Promise((resolve) => {
