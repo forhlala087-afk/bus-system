@@ -57,9 +57,10 @@
 
         let currentUser = { uid: "", name: "" };
         let currentBusId = "";
-        let currentBusDirection = ""; // 紀錄這趟車的方向
-        let currentBusRouteName = ""; // ✨ 新增：紀錄這趟車的路線名稱
-        let justScanned = false;      // ✨ 新增：紀錄是否剛剛掃描 QR Code
+        let currentBusDirection = ""; 
+        let currentBusRouteName = ""; 
+        let currentTripId = "";       // 🌟 記錄公車的專屬發車時間戳
+        let justScanned = false;      
         let isAdminMode = false;
         let expireTime = 0;
         let globalCount = 0;
@@ -67,7 +68,6 @@
         const TOTAL_SECONDS = 600;
         const todayStr = new Date().toLocaleDateString().replace(/\//g, '-');
 
-        // ✨ 新增：清除單趟紀錄的專用小工具
         function clearTripData() {
             localStorage.removeItem('my_locked_stop');
             localStorage.removeItem('my_active_bus_id');
@@ -75,6 +75,7 @@
             localStorage.removeItem('is_changing');
             localStorage.removeItem('my_trip_direction');
             localStorage.removeItem('my_trip_route_name');
+            localStorage.removeItem('my_trip_id'); // 🌟 清除舊的趟次 ID
             localStorage.removeItem('my_trip_completed');
             localStorage.removeItem('my_trip_expired');
         }
@@ -94,35 +95,30 @@
                 currentUser.uid = profile.userId;
                 currentUser.name = profile.displayName;
 
-                // 👑 管理員權限判定
                 const isSuperAdmin = SUPER_ADMINS.includes(currentUser.uid);
                 isAdminMode = (new URLSearchParams(window.location.search).get('admin') === 'true') || isSuperAdmin;
                 if (isSuperAdmin) currentUser.name += " 👑";
 
-                // 🛡️ 網址解析與換車、過期判定
                 const urlParams = new URLSearchParams(window.location.search);
                 let busParam = urlParams.get('bus');
                 let lockedStop = localStorage.getItem('my_locked_stop');
                 let activeBus = localStorage.getItem('my_active_bus_id');
                 let isExpired = localStorage.getItem('my_trip_expired') === 'true';
 
-                // ✨ 如果網址有 bus 參數，代表乘客是「剛剛掃描 QR Code」進來的！
                 if (busParam) {
                     justScanned = true;
-                    // 如果掃了「另一台車」，或者這台車上一趟已經被標記為「過期/換班次」
                     if ((activeBus && busParam !== activeBus) || isExpired) {
-                        clearTripData(); // 洗掉舊歷史，給他全新的一趟
+                        clearTripData(); 
                         lockedStop = null;
                         activeBus = null;
                     }
                     currentBusId = busParam;
                 } else {
-                    // 不是新掃描（只是從背景切回來，或是重整網頁）
                     justScanned = false;
                     
                     if (isExpired) {
                         showOverlay("🔄 班次已切換", "本班車已切換路線或方向。<br><br>若您仍在車上並需預約下車，請<b style='color:#e74c3c;'>重新掃描椅背上的 QR Code</b>。");
-                        return; // 直接擋死，不讓它載入
+                        return; 
                     }
                     
                     if (lockedStop && activeBus) {
@@ -138,7 +134,6 @@
                     window.history.replaceState(null, document.title, cleanUrl);
                 }
 
-                // 💀 雲端限制檢查
                 const userStatsRef = ref(db, `usage_stats/${todayStr}/${currentUser.uid}`);
                 const snap = await get(userStatsRef);
                 if (snap.exists()) {
@@ -159,10 +154,8 @@
 
                 document.getElementById('bus-title').innerText = `目前車號：${currentBusId} (乘客：${currentUser.name})`;
                 
-                // 恢復鎖定畫面
                 if (lockedStop) {
                     localStorage.removeItem('is_changing');
-                    // 如果已經抵達，直接顯示完成畫面
                     if (localStorage.getItem('my_trip_completed') === 'true') {
                         showOverlay("📍 抵達預約站點", "您已抵達預約站點，本趟車程預約已結束。<br><br><span style='font-size:14px;color:#888;'>(若司機切換路線方向，系統將自動為您解鎖)</span>");
                     } else {
@@ -234,7 +227,12 @@
                             return; 
                         } else if (myLockedStop) {
                             let isArrivedOrPassed = false;
-                            if (state.currentStop === myLockedStop || (!state.upcomingStops?.includes(myLockedStop) && !state.oppositeStops?.includes(myLockedStop))) {
+                            
+                            // 🌟 完美修復「空陣列陷阱」：確保它找不到陣列時不會亂判斷！
+                            const upc = state.upcomingStops || [];
+                            const opp = state.oppositeStops || [];
+                            
+                            if (state.currentStop === myLockedStop || (!upc.includes(myLockedStop) && !opp.includes(myLockedStop))) {
                                 isArrivedOrPassed = true;
                             }
 
@@ -247,8 +245,6 @@
                     }
                 }
                 renderStops(state);
-                
-                // ✨ 處理完第一次檢查後，將掃碼狀態解除，以防搭乘途中被誤判
                 justScanned = false; 
             });
         }
@@ -309,21 +305,14 @@
             }
 
             try {
-                // 🛑 Firebase 智慧橡皮擦：清除舊站點的個人預約，並檢查是否還有其他人
             if (isChanging && oldStop && oldStop !== stopName) {
-                // 1. 先把「自己」從這站的排隊名單 (UIDs) 中刪除
                 await set(ref(db, `buses/${currentBusId}/stop_uids/${oldStop}/${currentUser.uid}`), null);
-                
-                // 2. 去問雲端：這站還有沒有「其他人」的 UID 留著？
                 const remainSnap = await get(ref(db, `buses/${currentBusId}/stop_uids/${oldStop}`));
-                
-                // 3. 如果名單是空的 (真的沒人預約這站了)，才把這站的實體下車鈴燈號熄滅！
                 if (!remainSnap.exists() || Object.keys(remainSnap.val()).length === 0) {
                     await set(ref(db, `buses/${currentBusId}/requested_stops/${oldStop}`), null);
                 }
             }
 
-                // ✨ 雙軌寫入：讓遙控器與主機亮燈 (相容舊版) + 儲存推播 UID
                 await set(ref(db, `buses/${currentBusId}/requested_stops/${stopName}`), true);
                 await set(ref(db, `buses/${currentBusId}/stop_uids/${stopName}/${currentUser.uid}`), true);
                 
@@ -337,14 +326,14 @@
                     busDailyCount++;
                 }
 
-                // 紀錄單趟狀態與「當前方向、路線、趟次」
+                // 🌟 完美寫入：當下這趟的路線、方向、與不可取代的時間戳！
                 localStorage.setItem('my_locked_stop', stopName);
                 localStorage.setItem('my_active_bus_id', currentBusId);
                 localStorage.setItem('my_trip_direction', currentBusDirection);
                 localStorage.setItem('my_trip_route_name', currentBusRouteName); 
-                localStorage.setItem('my_trip_id', currentTripId); // 🌟 寫入專屬趟次時間戳！
+                localStorage.setItem('my_trip_id', currentTripId); // ✨ 關鍵防線
                 localStorage.setItem('my_trip_completed', 'false');
-                localStorage.removeItem('my_trip_expired');
+                localStorage.removeItem('my_trip_expired'); 
                 
                 if (isChanging) {
                     localStorage.setItem('my_change_used', 'true');
