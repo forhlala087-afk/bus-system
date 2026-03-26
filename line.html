@@ -106,22 +106,30 @@
                 let isExpired = localStorage.getItem('my_trip_expired') === 'true';
 
                 // ✨ 如果網址有 bus 參數，代表乘客是帶車號進來的
+                // 🛡️ 防護升級：用 SessionStorage 區分「重新整理」與「全新掃描」
                 if (busParam) {
-                    // 🌟 神級防護：用 sessionStorage 判斷他是「重新整理」還是「真正的新掃描」
                     if (sessionStorage.getItem('session_scanned_bus') === busParam) {
-                        justScanned = false; // 抓到了！這是重新整理，不要當作新乘客！
-                    } else {
-                        justScanned = true;  // 這是貨真價實的全新掃描！
-                        sessionStorage.setItem('session_scanned_bus', busParam); // 記在這次分頁的暫存裡
+                        // 👉 這是「重新整理」網頁！
+                        justScanned = false;
+                        currentBusId = busParam;
                         
-                        // 如果掃了「另一台車」，或者這台車上一趟已經被標記為「過期/換班次」
+                        if (isExpired) {
+                            showOverlay("🔄 班次已切換", "本班車已切換路線或方向。<br><br>若您需預約下車，請<b style='color:#e74c3c;'>重新掃描椅背上的 QR Code</b>。");
+                            return; // 直接鎖死畫面，不准進入！
+                        }
+                    } else {
+                        // 👉 這是「真正全新掃描 QR Code」進來的！
+                        justScanned = true;
+                        sessionStorage.setItem('session_scanned_bus', busParam);
+                        
+                        // 既然是新掃描的，如果之前的紀錄過期了，就幫他全新洗白
                         if ((activeBus && busParam !== activeBus) || isExpired) {
-                            clearTripData(); // 洗掉舊歷史，給他全新的一趟
+                            clearTripData(); 
                             lockedStop = null;
                             activeBus = null;
                         }
+                        currentBusId = busParam;
                     }
-                    currentBusId = busParam;
                 } else {
                     justScanned = false;
                     
