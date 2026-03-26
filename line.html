@@ -105,12 +105,21 @@
                 let activeBus = localStorage.getItem('my_active_bus_id');
                 let isExpired = localStorage.getItem('my_trip_expired') === 'true';
 
+                // ✨ 如果網址有 bus 參數，代表乘客是帶車號進來的
                 if (busParam) {
-                    justScanned = true;
-                    if ((activeBus && busParam !== activeBus) || isExpired) {
-                        clearTripData(); 
-                        lockedStop = null;
-                        activeBus = null;
+                    // 🌟 神級防護：用 sessionStorage 判斷他是「重新整理」還是「真正的新掃描」
+                    if (sessionStorage.getItem('session_scanned_bus') === busParam) {
+                        justScanned = false; // 抓到了！這是重新整理，不要當作新乘客！
+                    } else {
+                        justScanned = true;  // 這是貨真價實的全新掃描！
+                        sessionStorage.setItem('session_scanned_bus', busParam); // 記在這次分頁的暫存裡
+                        
+                        // 如果掃了「另一台車」，或者這台車上一趟已經被標記為「過期/換班次」
+                        if ((activeBus && busParam !== activeBus) || isExpired) {
+                            clearTripData(); // 洗掉舊歷史，給他全新的一趟
+                            lockedStop = null;
+                            activeBus = null;
+                        }
                     }
                     currentBusId = busParam;
                 } else {
