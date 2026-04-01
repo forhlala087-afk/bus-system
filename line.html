@@ -110,13 +110,15 @@
                 let isExpired = localStorage.getItem('my_trip_expired') === 'true';
 
                 if (busParam) {
-                    justScanned = true;
-                    if ((activeBus && busParam !== activeBus) || isExpired) {
-                        clearTripData(); 
-                        lockedStop = null;
-                        activeBus = null;
-                    }
-                    currentBusId = busParam;
+            justScanned = true;
+            // 🌟 核心修復 1：如果上次已經到站 (isCompleted)，掃碼就當作全新開始，清空舊紀錄！
+            let isCompleted = localStorage.getItem('my_trip_completed') === 'true';
+            if ((activeBus && busParam !== activeBus) || isExpired || isCompleted) {
+                clearTripData(); 
+                lockedStop = null;
+                activeBus = null;
+            }
+            currentBusId = busParam;
                 } else {
                     justScanned = false;
                     if (isExpired) {
@@ -228,9 +230,11 @@
                     }
                 }
 
+                let isGracePeriod = (Date.now() - listenerStartTime) < 3000;
+
                 if (isSessionChanged || isSavedChanged) {
-                    if (justScanned) {
-                        // 剛掃碼的新乘客，或者是舊乘客剛重新掃碼 -> 清空舊資料，讓他看新路線
+                    if (justScanned || isGracePeriod) {
+                        // 剛掃碼，或是遇到 Firebase 快取切換真資料的瞬間 -> 寬容處理
                         clearTripData();
                         overlay.style.display = 'none'; 
                         
