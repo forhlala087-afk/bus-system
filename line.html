@@ -193,6 +193,9 @@
         }
 
         function startBusListener() {
+            // 🌟 修復 1：這裡必須宣告起始時間！
+            let listenerStartTime = Date.now(); 
+
             onValue(ref(db, `buses/${currentBusId}/state`), (snap) => {
                 if (!snap.exists()) { container.innerHTML = "車輛尚未發車"; return; }
                 const state = snap.val();
@@ -230,6 +233,7 @@
                     }
                 }
 
+                // 🌟 修復 2：這裡的 ilet 已經改成 let 了！
                 let isGracePeriod = (Date.now() - listenerStartTime) < 3000;
 
                 if (isSessionChanged || isSavedChanged) {
