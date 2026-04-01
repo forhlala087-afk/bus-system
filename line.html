@@ -111,9 +111,9 @@
 
                 if (busParam) {
             justScanned = true;
-            // 🌟 核心修復 1：如果上次已經到站 (isCompleted)，掃碼就當作全新開始，清空舊紀錄！
-            let isCompleted = localStorage.getItem('my_trip_completed') === 'true';
-            if ((activeBus && busParam !== activeBus) || isExpired || isCompleted) {
+            // 🌟 修復：拿掉 isCompleted，只在「換別台車」或「被標記過期」時才強制洗白。
+            // 換班次 (TripId 改變) 的洗白，交給下面的 Listener 處理就好！
+            if ((activeBus && busParam !== activeBus) || isExpired) {
                 clearTripData(); 
                 lockedStop = null;
                 activeBus = null;
@@ -457,4 +457,3 @@
     </div>
 </body>
 </html>
-
