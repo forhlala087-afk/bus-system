@@ -364,13 +364,18 @@
                 await set(ref(db, `buses/${currentBusId}/stop_uids/${stopName}/${currentUser.uid}`), true);
                 
                 if (!isAdminMode && !isChanging) {
-                    const globalCountRef = ref(db, `usage_stats/${todayStr}/${currentUser.uid}/global_count`);
+                   const globalCountRef = ref(db, `usage_stats/${todayStr}/${currentUser.uid}/global_count`);
                     const busCountRef = ref(db, `usage_stats/${todayStr}/${currentUser.uid}/buses/${currentBusId}/daily_count`);
                     
-                    await runTransaction(globalCountRef, (current) => (current || 0) + 1);
-                    await runTransaction(busCountRef, (current) => (current || 0) + 1);
-                    globalCount++;
-                    busDailyCount++;
+                    // 先取得原本的次數，加 1 之後直接寫入
+                    const gSnap = await get(globalCountRef);
+                    const bSnap = await get(busCountRef);
+                    
+                    globalCount = (gSnap.exists() ? gSnap.val() : 0) + 1;
+                    busDailyCount = (bSnap.exists() ? bSnap.val() : 0) + 1;
+                    
+                    await set(globalCountRef, globalCount);
+                    await set(busCountRef, busDailyCount);
                 }
 
                 localStorage.setItem('my_locked_stop', stopName);
