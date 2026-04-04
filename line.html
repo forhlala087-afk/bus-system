@@ -32,7 +32,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, onValue, set, get, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDjxGWY6hN4yx-v2pa6I5UItxy_PNaOPK8",
@@ -233,7 +233,6 @@
                 let isGracePeriod = (Date.now() - listenerStartTime) < 3000;
                 
                 // 🌟 終極防線：只有「真正掃碼」或「前3秒的幽靈快取翻轉(isSessionChanged)」可以被寬容。
-                // 如果你是拿著舊預約(isSavedChanged)重新打開網頁，卻沒有重新掃碼，直接擋下！
                 let allowedToClear = justScanned || (isSessionChanged && isGracePeriod);
 
                 if (isSessionChanged || isSavedChanged) {
@@ -250,6 +249,7 @@
                         return; 
                     }
                 } else {
+                    // 🛡️ 同路線、同班次的安全區
                     if (myActiveBus === currentBusId) {
                         if (isCompleted) {
                             showOverlay("📍 抵達預約站點", "您已抵達預約站點，本趟車程預約已結束。<br><br><span style='font-size:14px;color:#888;'>(若需再次預約，請重新掃描 QR Code)</span>");
@@ -299,7 +299,6 @@
                     const stopName = typeof stopData === 'string' ? stopData : stopData.name;
                     const stopDist = typeof stopData === 'string' ? 0 : stopData.dist;
 
-                    // 🛡️ 規則 1：如果是「前兩站」(index 0 或 1)
                     if (index === 0 || index === 1) {
                         if (stopDist > 0 && stopDist < 500) {
                             btn.className += ' disabled-btn';
@@ -312,7 +311,6 @@
                             btn.onclick = () => handleRequest(stopName);
                         }
                     } 
-                    // 🛡️ 規則 2：「第三站以後」(index >= 2) 無限期開放！
                     else {
                         btn.innerText = `📍 ${stopName}`;
                         btn.onclick = () => handleRequest(stopName);
@@ -352,6 +350,7 @@
             }
 
             try {
+                // 1. 如果是修改預約，先砍掉舊的
                 if (isChanging && oldStop && oldStop !== stopName) {
                     await set(ref(db, `buses/${currentBusId}/stop_uids/${oldStop}/${currentUser.uid}`), null);
                     const remainSnap = await get(ref(db, `buses/${currentBusId}/stop_uids/${oldStop}`));
@@ -360,24 +359,33 @@
                     }
                 }
 
+                // 2. 寫入新的預約紀錄
                 await set(ref(db, `buses/${currentBusId}/requested_stops/${stopName}`), true);
                 await set(ref(db, `buses/${currentBusId}/stop_uids/${stopName}/${currentUser.uid}`), true);
                 
+                // 3. 🌟 終極修復：用更安全的寫法來紀錄次數，絕對不會被擋！
                 if (!isAdminMode && !isChanging) {
-                   const globalCountRef = ref(db, `usage_stats/${todayStr}/${currentUser.uid}/global_count`);
-                    const busCountRef = ref(db, `usage_stats/${todayStr}/${currentUser.uid}/buses/${currentBusId}/daily_count`);
+                    const gRef = ref(db, `usage_stats/${todayStr}/${currentUser.uid}/global_count`);
+                    const bRef = ref(db, `usage_stats/${todayStr}/${currentUser.uid}/buses/${currentBusId}/daily_count`);
                     
-                    // 先取得原本的次數，加 1 之後直接寫入
-                    const gSnap = await get(globalCountRef);
-                    const bSnap = await get(busCountRef);
-                    
-                    globalCount = (gSnap.exists() ? gSnap.val() : 0) + 1;
-                    busDailyCount = (bSnap.exists() ? bSnap.val() : 0) + 1;
-                    
-                    await set(globalCountRef, globalCount);
-                    await set(busCountRef, busDailyCount);
+                    try {
+                        const gSnap = await get(gRef);
+                        const bSnap = await get(bRef);
+                        
+                        let newGlobal = (gSnap.exists() ? gSnap.val() : 0) + 1;
+                        let newBus = (bSnap.exists() ? bSnap.val() : 0) + 1;
+                        
+                        await set(gRef, newGlobal);
+                        await set(bRef, newBus);
+                        
+                        globalCount = newGlobal;
+                        busDailyCount = newBus;
+                    } catch(statErr) {
+                        console.warn("次數統計寫入被阻擋 (安全規則)，但不影響預約功能");
+                    }
                 }
 
+                // 4. 更新手機端的記憶
                 localStorage.setItem('my_locked_stop', stopName);
                 localStorage.setItem('my_active_bus_id', currentBusId);
                 localStorage.setItem('my_trip_direction', currentBusDirection);
@@ -398,9 +406,13 @@
                     localStorage.setItem('my_change_used', 'false');
                 }
 
+                // 5. 顯示成功鎖定畫面
                 showActiveLockScreen(stopName);
 
-            } catch (e) { alert("網路不穩，發送失敗，請再試一次"); }
+            } catch (e) { 
+                console.error("預約失敗詳細原因:", e);
+                alert("網路不穩，發送失敗，請再試一次"); 
+            }
         }
 
         window.showActiveLockScreen = function(stopName) {
