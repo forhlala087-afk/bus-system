@@ -252,7 +252,9 @@
                     // 🛡️ 同路線、同班次的安全區
                     if (myActiveBus === currentBusId) {
                         if (isCompleted) {
-                            showOverlay("📍 抵達預約站點", "您已抵達預約站點，本趟車程預約已結束。<br><br><span style='font-size:14px;color:#888;'>(若需再次預約，請重新掃描 QR Code)</span>");
+                            // 防呆：如果不知為何還有這個標記，直接清空失效
+                            clearTripData();
+                            showOverlay("🚫 連結失效", "此趟車程已結束，請重新掃描車內 QR Code。<br><br><span style='font-size:14px;color:#888;'>(為保護系統，下車後連結將自動失效)</span>");
                             return; 
                         } else if (myLockedStop) {
                             let isArrivedOrPassed = false;
@@ -264,7 +266,9 @@
                             }
 
                             if (isArrivedOrPassed) {
-                                localStorage.setItem('my_trip_completed', 'true');
+                                // 🔥 極致嚴格版：抵達的瞬間，底層立刻無情撕票！
+                                clearTripData(); 
+                                // 當下螢幕還是會給最後一次溫柔提示，但只要一縮小回背景再重開，車票就永遠消失了！
                                 showOverlay("📍 抵達預約站點", "您已抵達預約站點，本趟車程預約已結束。<br><br><span style='font-size:14px;color:#888;'>(若需再次預約，請重新掃描 QR Code)</span>");
                                 return; 
                             }
