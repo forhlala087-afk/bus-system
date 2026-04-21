@@ -109,9 +109,10 @@
                 let activeBus = localStorage.getItem('my_active_bus_id');
                 let isExpired = localStorage.getItem('my_trip_expired') === 'true';
 
+                // ✨ 如果網址有 bus 參數，代表乘客是「剛掃描 QR Code」進來的！
                 if (busParam) {
                     justScanned = true;
-                    // 🌟 終極修復：拿掉 isCompleted，只在「換別台車」或「被標記過期」時才洗白。
+                    // 如果掃了別台車，或是這台車上一趟已經過期，才洗白舊記憶
                     if ((activeBus && busParam !== activeBus) || isExpired) {
                         clearTripData(); 
                         lockedStop = null;
@@ -119,17 +120,10 @@
                     }
                     currentBusId = busParam;
                 } else {
-                    justScanned = false;
-                    if (isExpired) {
-                        showOverlay("🔄 班次已切換", "本班車已切換路線或方向。<br><br>若您仍在車上並需預約下車，請<b style='color:#e74c3c;'>重新掃描椅背上的 QR Code</b>。");
-                        return; 
-                    }
-                    if (lockedStop && activeBus) {
-                        currentBusId = activeBus; 
-                    } else {
-                        showOverlay("🚫 連結失效", "請重新掃描車內 QR Code。<br><br><span style='font-size:14px;color:#888;'>(為保護系統，離開公車後連結將自動失效)</span>");
-                        return;
-                    }
+                    // 🔥 霸王條款：只要網址列沒有車號 (包含重新整理、從背景切回導致重載)，一律無情判死刑！
+                    // (我們不清空 LocalStorage，這樣他如果乖乖去重掃同台車的 QR Code，車票還能馬上復活)
+                    showOverlay("🚫 連結失效", "請重新掃描車內 QR Code。<br><br><span style='font-size:14px;color:#e74c3c;font-weight:bold;'>(為確保預約即時性，重新整理或離開畫面將自動失效)</span>");
+                    return; // 🛑 程式直接死在這裡，不准往下跑！
                 }
 
                 if (window.history && window.history.replaceState && busParam) {
@@ -252,9 +246,7 @@
                     // 🛡️ 同路線、同班次的安全區
                     if (myActiveBus === currentBusId) {
                         if (isCompleted) {
-                            // 防呆：如果不知為何還有這個標記，直接清空失效
-                            clearTripData();
-                            showOverlay("🚫 連結失效", "此趟車程已結束，請重新掃描車內 QR Code。<br><br><span style='font-size:14px;color:#888;'>(為保護系統，下車後連結將自動失效)</span>");
+                            showOverlay("📍 抵達預約站點", "您已抵達預約站點，本趟車程預約已結束。<br><br><span style='font-size:14px;color:#888;'>(若需再次預約，請重新掃描 QR Code)</span>");
                             return; 
                         } else if (myLockedStop) {
                             let isArrivedOrPassed = false;
@@ -266,9 +258,7 @@
                             }
 
                             if (isArrivedOrPassed) {
-                                // 🔥 極致嚴格版：抵達的瞬間，底層立刻無情撕票！
-                                clearTripData(); 
-                                // 當下螢幕還是會給最後一次溫柔提示，但只要一縮小回背景再重開，車票就永遠消失了！
+                                localStorage.setItem('my_trip_completed', 'true');
                                 showOverlay("📍 抵達預約站點", "您已抵達預約站點，本趟車程預約已結束。<br><br><span style='font-size:14px;color:#888;'>(若需再次預約，請重新掃描 QR Code)</span>");
                                 return; 
                             }
